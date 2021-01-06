@@ -1,32 +1,64 @@
 #include "cassius.h"
 #include <unistd.h>
 #include <dirent.h>
+#include <stdlib.h>
+#include <fcntl.h>
+#include <strings.h>
 
-BOOL is_c_file(const char *s)
+static void	store_proto_names(t_master *m, const char *file_name, t_string_tab *protos)
 {
-	int i = 0;
+	int fd = open(file_name, O_RDONLY);
+	UINT len = file_len(fd);
+	char *content = malloc(len + 1);
+	UINT i = 0, start;
 
-	while (s[i])
-		i++;
-	return(i > 3 && s[i - 1] == 'c' && s[i - 2] == '.');
+	read(fd, content, len);
+	content[len] = '\0';
+	close(fd);
+	(void)m;
+	while (content[i])
+	{
+		if (is_alpha(content[i]))
+		{
+			start = i;
+			i = next_line_offset(content, i);
+			if (content[i] == '{')
+			{
+				protos->cell_number++;
+				protos->tab = realloc(protos->tab, protos->tab_size + i - start + 1);
+				strcpy_len(content + start, protos->tab + protos->tab_size, i - start - 1);
+				protos->tab_size += i - start + 1;
+				protos->tab[protos->tab_size - 2] = ';';
+				protos->tab[protos->tab_size - 1] = '\0';
+			}
+		}
+		else
+			i = next_line_offset(content, i);
+	}
+	free(content);
 }
 
-void tidy_prototypes(t_master *m)
+void	tidy_prototypes(t_master *m)
 {
 	DIR *d;
 	struct dirent *dir;
+	t_string_tab protos;
 
 	(void)m;
 	puts("Detected prototypes:");
-	critical_test(chdir("src") == 0, "You must be at the root of your project. Your source folder must be named src");
-
+	critical_test(chdir("src") == 0, "You must be at the root of your project. Your source folder must be named src.");
 	d = opendir(".");
 	if (d)
 	{
+		bzero(&protos, sizeof(protos));
 		while ((dir = readdir(d)) != NULL)
 		{
-			printf("%s\n", dir->d_name);
+			if (dir->d_type == DT_REG && is_dot(dir->d_name, 'c'))
+				store_proto_names(m, dir->d_name, &protos);
 		}
 		closedir(d);
 	}
+	print_string_tab(&protos);
+	if (protos.tab)
+		free(protos.tab);
 }

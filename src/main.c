@@ -86,6 +86,6 @@ int main(int argc, char const *argv[])
 
 	process_args(argc, argv, &m);
 	m.to_exec(&m);
-	puts("Success.");
+	puts("\nSuccess.");
 	return 0;
 }
