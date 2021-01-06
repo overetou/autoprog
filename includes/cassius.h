@@ -4,8 +4,8 @@
 # include <stdio.h>
 # include <stdlib.h>
 
-# define USAGE "\n[] = optionnal, <> = required.\n./cassius [42] <command> [command oject]\nAvailable commands:\n"\
-"  tidy\nAvailable command objects:\n  Tidy:\n\tprototypes"
+# define USAGE "Usage:\n./cassius [42] <command> [command object]\nAvailable commands:\n"\
+"  tidy\nAvailable command objects:\n  prototypes\n\n[] = optionnal, <> = required."
 
 # define BOOL char
 # define TRUE 1
@@ -14,7 +14,7 @@
 typedef struct	s_master
 {
 	BOOL 	ft;//Forty Two mode state.
-	void	(*to_exec)(t_master*);
+	void	(*to_exec)(struct s_master*);
 }				t_master;
 
 void tidy_prototypes(t_master *m);
