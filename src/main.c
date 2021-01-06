@@ -31,7 +31,7 @@ char strcmp_n(const char *s1, int s1_size, const char *s2, int s2_size)
 	return (1);
 }
 
-process_command(int argc, const char **argv, t_master *m, int len, int i)
+static void process_command(int argc, const char **argv, t_master *m, int len, int i)
 {
 	critical_test(strcmp_n(argv[i], len, "tidy", 4), "Invalid command." USAGE);
 	i++;
@@ -40,7 +40,7 @@ process_command(int argc, const char **argv, t_master *m, int len, int i)
 	m->to_exec = tidy_prototypes;
 }
 
-void process_args(int argc,	const char **argv, t_master *m)
+static void process_args(int argc,	const char **argv, t_master *m)
 {
 	int len;
 
@@ -65,6 +65,7 @@ int main(int argc, char const *argv[])
 	t_master m;
 
 	process_args(argc, argv, &m);
+	m.to_exec(&m);
 	puts("Success.");
 	return 0;
 }
