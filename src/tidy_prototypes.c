@@ -20,6 +20,8 @@ static void	store_proto_names(t_master *m, const char *file_name, t_string_tab *
 	{
 		if (is_alpha(content[i]))
 		{
+			if (i + 6 < len && strcmp_on_n(content + i, "static", 6))
+				i += 7;
 			start = i;
 			i = next_line_offset(content, i);
 			if (content[i] == '{')

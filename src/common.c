@@ -1,6 +1,19 @@
 #include "cassius.h"
 #include <unistd.h>
 
+BOOL strcmp_on_n(const char *s1, const char *s2, int n)
+{
+	int i = 0;
+
+	while (i != n)
+	{
+		if (s1[i] != s2[i])
+			return (FALSE);
+		i++;
+	}
+	return (TRUE);
+}
+
 BOOL is_dot(const char *s, const char c)
 {
 	int i = 0;
