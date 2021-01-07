@@ -1,4 +1,5 @@
 #include "cassius.h"
+#include <string.h>
 
 t_word_tree *tree_dive(t_word_tree *root, UINT notch)
 {
@@ -71,12 +72,12 @@ void	add_remainer_to_floor(t_string_tab *s_tab, UINT scanned_word_index, t_word_
 	s_tab->tab[scanned_word_index] = NULL;
 }
 
-char	get_next_letter(t_string_tab *s_tab, UINT noch, UINT *scanned_word_index, t_word_tree *root)
+char	get_next_letter(t_string_tab *s_tab, UINT notch, UINT *scanned_word_index, t_word_tree *root)
 {
-	root = tree_dive(root, noch);
+	root = tree_dive(root, notch);
 	if (!(*scanned_word_index) && root->kids_nb)
 	{
-		while (s_tab->tab[*(scanned_word_index)][noch] != root->letter)
+		while (s_tab->tab[*(scanned_word_index)][notch] != root->letter)
 			(*(scanned_word_index))++;
 	}
 	(*(scanned_word_index))++;
@@ -86,7 +87,7 @@ char	get_next_letter(t_string_tab *s_tab, UINT noch, UINT *scanned_word_index, t
 			return (0);
 		(*(scanned_word_index))++;
 	}
-	return (s_tab->tab[*scanned_word_index][noch]);
+	return (s_tab->tab[*scanned_word_index][notch]);
 }
 
 //the given branch must not be already allocated or there will be a leak.
@@ -117,4 +118,28 @@ t_word_tree	*word_tree(t_string_tab *s_tab)
 		letter = get_next_letter(s_tab, notch, &scanned_word_index, root);
 	}
 	return (root);
+}
+
+BOOL	is_word_in_tree(const char *word, t_word_tree *root)
+{
+	UINT	notch = 0, i = 0, len = strlen(word);
+
+	while (root->kids)
+	{
+		if (root->kids[i]->letter == word[notch])
+		{
+			if (notch == len)
+				return TRUE;
+			notch++;
+			root = root->kids[i];
+			i = 0;
+		}
+		else
+		{
+			i++;
+			if (root->kids_nb == i)
+				return FALSE;
+		}
+	}
+	return (strcmp_n(word + notch, len - notch, (char*)root, strlen((char*)root)));
 }

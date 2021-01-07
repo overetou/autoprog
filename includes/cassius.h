@@ -42,5 +42,6 @@ void strcpy_len(const char *src, char *dest, UINT len);
 void 	print_string_tab(t_string_tab *protos);
 UINT next_line_offset(const char *s, UINT i);
 BOOL strcmp_on_n(const char *s1, const char *s2, int n);
+BOOL strcmp_n(const char *s1, int s1_size, const char *s2, int s2_size);
 
 #endif
