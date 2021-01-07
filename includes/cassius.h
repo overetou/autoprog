@@ -25,20 +25,12 @@ typedef struct	s_string_tab
 	int		cell_number;
 }				t_string_tab;
 
-typedef struct	s_letter_branch
+typedef struct	s_word_tree
 {
-	char	is_letter;//should always be true
-	char	letter;
-	void	*sub_branchs;
-	char	sub_branchs_number;
-}				t_letter_branch;
-
-typedef struct	s_word_end_branch
-{
-	char		is_letter;//should always be false
-	const char	*word_end;
-	void		*data;
-}				t_word_end_branch;
+	char				letter;
+	struct s_word_tree	**kids;
+	UCHAR				kids_nb;
+}				t_word_tree;
 
 void tidy_prototypes(t_master *m);
 void critical_test(char bool_val, const char *msg);
