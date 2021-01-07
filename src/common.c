@@ -61,12 +61,11 @@ UINT next_line_offset(const char *s, UINT i)
 void 	print_string_tab(t_string_tab *protos)
 {
 	int i = 0;
-	UINT pos = 0;
 
-	printf("cell number: %d\n", protos->cell_number);
-	while (i++ != protos->cell_number)
+	//printf("cell number: %d\n", protos->cell_number);
+	while (i != protos->cell_number)
 	{
-		puts(protos->tab + pos);
-		while (protos->tab[pos++]);
+		puts(protos->tab[i]);
+		i++;
 	}
 }

@@ -27,11 +27,11 @@ static void	store_proto_names(t_master *m, const char *file_name, t_string_tab *
 			if (content[i] == '{')
 			{
 				protos->cell_number++;
-				protos->tab = realloc(protos->tab, protos->tab_size + i - start + 1);
-				strcpy_len(content + start, protos->tab + protos->tab_size, i - start - 1);
-				protos->tab_size += i - start + 1;
-				protos->tab[protos->tab_size - 2] = ';';
-				protos->tab[protos->tab_size - 1] = '\0';
+				protos->tab = realloc(protos->tab, protos->cell_number * sizeof(char*));
+				protos->tab[protos->cell_number - 1] = malloc(i - start + 1);
+				strcpy_len(content + start, protos->tab[protos->cell_number - 1], i - start - 1);
+				protos->tab[protos->cell_number - 1][i - start - 2] = ';';
+				protos->tab[protos->cell_number - 1][i - start - 1] = '\0';
 			}
 		}
 		else
@@ -61,6 +61,7 @@ void	tidy_prototypes(t_master *m)
 		closedir(d);
 	}
 	print_string_tab(&protos);
+	build_name_tree(protos);
 	if (protos.tab)
 		free(protos.tab);
 }

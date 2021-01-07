@@ -8,6 +8,7 @@
 "  tidy\nAvailable command objects:\n  prototypes\n\n[] = optionnal, <> = required."
 
 # define BOOL char
+# define UCHAR unsigned char
 # define UINT unsigned int
 # define TRUE 1
 # define FALSE 0
@@ -20,10 +21,24 @@ typedef struct	s_master
 
 typedef struct	s_string_tab
 {
-	char	*tab;
+	char	**tab;
 	int		cell_number;
-	UINT	tab_size;
 }				t_string_tab;
+
+typedef struct	s_letter_branch
+{
+	char	is_letter;//should always be true
+	char	letter;
+	void	*sub_branchs;
+	char	sub_branchs_number;
+}				t_letter_branch;
+
+typedef struct	s_word_end_branch
+{
+	char		is_letter;//should always be false
+	const char	*word_end;
+	void		*data;
+}				t_word_end_branch;
 
 void tidy_prototypes(t_master *m);
 void critical_test(char bool_val, const char *msg);
