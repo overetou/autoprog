@@ -2,53 +2,6 @@
 #include <string.h>
 #include <unistd.h>
 
-static t_word_tree *tree_dive(t_word_tree *root, UINT notch)
-{
-	UINT	floor = 0;
-
-	while (floor++ != notch)
-	{
-		root = *(root->kids);
-		printf("On the floor of letter: %c.\n", root->letter);
-	}
-	return (root);
-}
-
-static void	prepare_adding_object(t_word_tree *branch)
-{
-	if (branch->kids_nb)
-	{
-		printf("Already %u kids registered.\n", branch->kids_nb);
-		branch->kids = realloc(branch->kids - branch->kids_nb + 1, sizeof(void*) * branch->kids_nb);
-		if (!(branch->kids))
-		{
-			puts("prepare_adding_object: realloc failed.");
-			exit(0);
-		}
-		branch->kids += branch->kids_nb;
-		(branch->kids_nb)++;
-	}
-	else
-	{
-		puts("First kid to be registered.");
-		branch->kids = malloc(sizeof(void*));
-		branch->kids_nb = 1;
-	}
-}
-
-static BOOL	several_words_of_letter(t_string_tab *s_tab, UINT notch)
-{
-	UINT i = 1;
-
-	while (i != s_tab->cell_number)
-	{
-		if (s_tab->tab[i][notch] == s_tab->tab[0][notch])
-			return (TRUE);
-		i++;
-	}
-	return (FALSE);
-}
-
 static t_word_tree	*create_letter_branch(char content)
 {
 	t_word_tree	*branch = malloc(sizeof(t_word_tree));
@@ -57,82 +10,111 @@ static t_word_tree	*create_letter_branch(char content)
 	return (branch);
 }
 
-static void	branch_add_letter_kid(char letter, t_word_tree *branch)
+t_floor_data	*new_floor_data(t_string_tab *s_tab, t_word_tree *parent_branch, UINT pos)
 {
-	prepare_adding_object(branch);
-	*(branch->kids) = create_letter_branch(letter);
+	t_floor_data	*set = malloc(sizeof(t_floor_data));
+
+	set->s_tab = s_tab;
+	set->pos = pos;
+	set->parent_branch = parent_branch;
+	return (set);
 }
 
-//For the duration of the initialisation, kids will always point on the last sub_branch
-static void	add_letter_to_floor(char letter, t_word_tree *root, UINT notch)
+UINT	count_concurrents(t_floor_data *data_set, UINT notch)
 {
-	root = tree_dive(root, notch);
-	branch_add_letter_kid(letter, root);
-}
+	UINT	i = data_set->pos + 1, count = 0;
 
-static void	branch_add_word_end_kid(char *remainer, t_word_tree *branch)
-{
-	prepare_adding_object(branch);
-	*(branch->kids) = malloc(sizeof(t_remainer));
-	((t_remainer*)(*(branch->kids)))->fake_letter = 0;
-	((t_remainer*)(*(branch->kids)))->remainer = remainer;
-}
-
-static void	add_remainer_to_floor(t_string_tab *s_tab, UINT scanned_word_index, t_word_tree *root, UINT notch)
-{
-	printf("\nNo concurrent word for remainder: %s.\n", (s_tab->tab[scanned_word_index]) + notch);
-	root = tree_dive(root, notch);
-	branch_add_word_end_kid(s_tab->tab[scanned_word_index] + notch, root);
-	s_tab->tab[scanned_word_index] = NULL;
-}
-
-static char	get_next_letter(t_string_tab *s_tab, UINT notch, UINT *scanned_word_index, t_word_tree *root)
-{
-	root = tree_dive(root, notch);
-	while(!s_tab->tab[*scanned_word_index])
+	printf("\nCounting with notch on %u.\n", notch);
+	while (i != data_set->s_tab->cell_number)
 	{
-		if (*scanned_word_index == s_tab->cell_number)
-			return (0);
-		(*(scanned_word_index))++;
+		if (data_set->s_tab->tab[data_set->pos][notch] == data_set->s_tab->tab[i][notch])
+			{
+				printf("\"%s\" matched.\n", data_set->s_tab->tab[i]);
+				count++;
+			}
+		i++;
 	}
-	return (s_tab->tab[*scanned_word_index][notch]);
+	printf("Counted %u concurrents in total.\n", count);
+	return (count);
 }
 
-//the given branch must not be already allocated or there will be a leak.
+t_floor_data	*add_floor_data(t_floor_data *data_set, UINT notch, UINT count)
+{
+	t_string_tab	*t = new_string_tab(count + 1);
+	UINT			i = data_set->pos + 1;
+
+	printf("\nKids count of current branch + 1 = %u.\n", data_set->parent_branch->kids_nb + 1);
+	data_set->parent_branch->kids = realloc(data_set->parent_branch->kids, data_set->parent_branch->kids_nb + 1);
+	data_set->parent_branch->kids[data_set->parent_branch->kids_nb]	= create_letter_branch(data_set->s_tab->tab[data_set->pos][notch]);
+	(data_set->parent_branch->kids_nb)++;
+	t->tab[0] = data_set->s_tab->tab[data_set->pos];
+	printf("Added %s to the s_tab of the kid branch to be. (at index 0)\n", t->tab[0]);
+	while (count)
+	{
+		if (data_set->s_tab->tab[data_set->pos][notch] == data_set->s_tab->tab[i][notch])
+		{
+			t->tab[t->cell_number - count] = data_set->s_tab->tab[i];
+			printf("Added %s to the s_tab of the kid branch to be. (at index %u)\n", t->tab[t->cell_number - count], t->cell_number - count);
+			count--;
+		}
+	}
+	return (new_floor_data(t, data_set->parent_branch->kids[data_set->parent_branch->kids_nb - 1], data_set->pos));
+}
+
+t_remainer *create_remainer(const char *s)
+{
+	UINT	len = strlen(s);
+	t_remainer *res = malloc(sizeof(t_remainer) + len);
+
+	res->fake_letter = 0;
+	res->remainer = (char*)(res + sizeof(t_remainer));
+	strcpy_len(s, res->remainer, len);
+	return (res);
+}
+
+void	add_remainer(t_floor_data *data_set, UINT notch)
+{
+	data_set->parent_branch->kids = realloc(data_set->parent_branch->kids, data_set->parent_branch->kids_nb + 1);
+	data_set->parent_branch->kids[data_set->parent_branch->kids_nb] = create_remainer(data_set->s_tab->tab[data_set->pos] + notch);
+	(data_set->parent_branch->kids_nb)++;
+}
+
 t_word_tree	*word_tree(t_string_tab *s_tab)
 {
-	t_word_tree	*root;
-	UINT		notch = 0, scanned_word_index = 0;
-	char		letter = s_tab->tab[0][0],
-				several_candidats = s_tab->cell_number;
+	t_word_tree		*root = create_letter_branch('\0');
+	UINT			notch = 0, count;
+	t_floor_data	*data_sets, *temp;
 
-	root = create_letter_branch('\0');
-	while (letter)
+	data_sets = new_floor_data(s_tab, root, 0);
+	data_sets->next = NULL;
+	while (data_sets)
 	{
-		several_candidats = 0;
-		while (letter)
+		printf("Target locked: %s.\n", data_sets->s_tab->tab[data_sets->pos]);
+		while (data_sets->pos != data_sets->s_tab->cell_number)
 		{
-			if (several_words_of_letter(s_tab + scanned_word_index, notch))
+			count = count_concurrents(data_sets, notch);
+			if (count)
 			{
-				printf("\nSeveral words of letter: %c.\n", letter);
-				add_letter_to_floor(letter, root, notch);
-				several_candidats++;
+				temp = add_floor_data(data_sets, notch, count);
+				temp->next = data_sets;
+				data_sets = temp;
+				notch++;
+				printf("added a data pack. Notch is now %u.\n", notch);
 			}
 			else
 			{
-				add_remainer_to_floor(s_tab, scanned_word_index, root, notch);
-				printf("added remainder. s_tab->tab[scanned_word_index] is now NULL: %s.\n", s_tab->tab[scanned_word_index] == NULL ? "TRUE" : "FALSE");
-				if (s_tab->tab[scanned_word_index])
-					exit(0);
+				add_remainer(data_sets, notch);
+				printf("\"%s\" is well stored in the tree. New pos of current data pack = %u.\n", data_sets->s_tab->tab[data_sets->pos], data_sets->pos + 1);
+				(data_sets->pos)++;
 			}
-			letter = get_next_letter(s_tab, notch, &scanned_word_index, root);
-			printf("letter updated. scanned_word_index = %u. Letter = %c.\n", scanned_word_index, (letter ? letter : '0'));
 		}
-		printf("No more letter on floor: %u. Going %s one floor.\n", notch, (several_candidats ? "down" : "up"));
-		several_candidats ? notch++ : notch--;
-		scanned_word_index = 0;
-		letter = get_next_letter(s_tab, notch, &scanned_word_index, root);
+		temp = data_sets;
+		data_sets = data_sets->next;
+		free(temp);
+		notch--;
+		printf("Freed a data pack. Notch is now %u.\n", notch);
 	}
+	puts("Done! Don't forget to free your string_tab!\n");
 	return (root);
 }
 

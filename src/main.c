@@ -90,16 +90,52 @@ int main(int argc, char const *argv[])
 	return 0;
 } */
 
+char *new_string(const char *s)
+{
+	int len = slen(s);
+	char *alloc;
+
+	alloc = malloc(len + 1);
+	strcpy_len(s, alloc, len);
+	alloc[len] = '\0';
+	return (alloc);
+}
+
+t_string_tab	*new_string_tab(UINT cell_number)
+{
+	t_string_tab *t = malloc(sizeof(t_string_tab) * cell_number);
+	t->tab = (char**)(t + sizeof(t_string_tab));
+	t->cell_number = cell_number;
+	return (t);
+}
+
+void			free_string_tab(t_string_tab *to_free)
+{
+	UINT	i = 0;
+
+	while (i != to_free->cell_number)
+	{
+		free(to_free->tab[i]);
+		i++;
+	}
+	free(to_free);
+}
+
 int	main(void)
 {
-	char *to_store[] = {"test", "mangekyou", "tintouin", "bernard", "berni", "gorille", "benzema"};
-	t_string_tab tab;
+	t_string_tab *tab = new_string_tab(7);
 	t_word_tree *tree;
 
+	tab->tab[0] = new_string("test");
+	tab->tab[1] = new_string("mangekyou");
+	tab->tab[2] = new_string("tintouin");
+	tab->tab[3] = new_string("bernard");
+	tab->tab[4] = new_string("berni");
+	tab->tab[5] = new_string("gorille");
+	tab->tab[6] = new_string("benzema");
+
 	puts("Trying to build the tree.");
-	tab.cell_number = 7;
-	tab.tab = to_store;
-	tree = word_tree(&tab);
+	tree = word_tree(tab);
 
 	puts("Tree built. Beginning search test.");
 	puts(is_word_in_tree("tintouin", sizeof("tintouin"), tree) ? "Ok" : "Failure");

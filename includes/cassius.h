@@ -38,6 +38,14 @@ typedef	struct	s_remainer
 	char	*remainer;
 }				t_remainer;
 
+typedef struct	s_floor_data
+{
+	t_string_tab		*s_tab;
+	UINT				pos;
+	t_word_tree			*parent_branch;
+	struct s_floor_data	*next;
+}				t_floor_data;
+
 void tidy_prototypes(t_master *m);
 void critical_test(char bool_val, const char *msg);
 BOOL is_dot(const char *s, const char c);
@@ -49,6 +57,8 @@ void 	print_string_tab(t_string_tab *protos);
 UINT next_line_offset(const char *s, UINT i);
 BOOL strcmp_on_n(const char *s1, const char *s2, int n);
 BOOL strcmp_n(const char *s1, int s1_size, const char *s2, int s2_size);
+t_string_tab	*new_string_tab(UINT cell_number);
+void			free_string_tab(t_string_tab *to_free);
 
 //word_tree
 t_word_tree	*word_tree(t_string_tab *s_tab);
