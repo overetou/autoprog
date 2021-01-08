@@ -41,7 +41,7 @@ int slen(const char *s)
 	return (i);
 }
 
-static void process_command(int argc, const char **argv, t_master *m, int len, int i)
+/* static void process_command(int argc, const char **argv, t_master *m, int len, int i)
 {
 	critical_test(strcmp_n(argv[i], len, "tidy", 4), "Invalid command.");
 	i++;
@@ -80,7 +80,7 @@ static void process_args(int argc,	const char **argv, t_master *m)
 	}
 }
 
-/* int main(int argc, char const *argv[])
+int main(int argc, char const *argv[])
 {
 	t_master m;
 

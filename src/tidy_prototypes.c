@@ -61,7 +61,7 @@ void	tidy_prototypes(t_master *m)
 		closedir(d);
 	}
 	print_string_tab(&protos);
-	build_name_tree(protos);
+	//build the tree here.
 	if (protos.tab)
 		free(protos.tab);
 }

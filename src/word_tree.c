@@ -9,7 +9,7 @@ static t_word_tree *tree_dive(t_word_tree *root, UINT notch)
 	while (floor++ != notch)
 	{
 		root = *(root->kids);
-		printf("On the floor of letter: %c\n", root->letter);
+		printf("On the floor of letter: %c.\n", root->letter);
 	}
 	return (root);
 }
@@ -22,7 +22,7 @@ static void	prepare_adding_object(t_word_tree *branch)
 		branch->kids = realloc(branch->kids - branch->kids_nb + 1, sizeof(void*) * branch->kids_nb);
 		if (!(branch->kids))
 		{
-			puts("prepare_adding_object: realloc failed");
+			puts("prepare_adding_object: realloc failed.");
 			exit(0);
 		}
 		branch->kids += branch->kids_nb;
@@ -30,7 +30,7 @@ static void	prepare_adding_object(t_word_tree *branch)
 	}
 	else
 	{
-		puts("First kid to be registered");
+		puts("First kid to be registered.");
 		branch->kids = malloc(sizeof(void*));
 		branch->kids_nb = 1;
 	}
@@ -38,7 +38,7 @@ static void	prepare_adding_object(t_word_tree *branch)
 
 static BOOL	several_words_of_letter(t_string_tab *s_tab, UINT notch)
 {
-	int i = 1;
+	UINT i = 1;
 
 	while (i != s_tab->cell_number)
 	{
@@ -80,7 +80,7 @@ static void	branch_add_word_end_kid(char *remainer, t_word_tree *branch)
 
 static void	add_remainer_to_floor(t_string_tab *s_tab, UINT scanned_word_index, t_word_tree *root, UINT notch)
 {
-	printf("\nNo concurrent word for remainder: %s\n", (s_tab->tab[scanned_word_index]) + notch);
+	printf("\nNo concurrent word for remainder: %s.\n", (s_tab->tab[scanned_word_index]) + notch);
 	root = tree_dive(root, notch);
 	branch_add_word_end_kid(s_tab->tab[scanned_word_index] + notch, root);
 	s_tab->tab[scanned_word_index] = NULL;
@@ -114,21 +114,21 @@ t_word_tree	*word_tree(t_string_tab *s_tab)
 		{
 			if (several_words_of_letter(s_tab + scanned_word_index, notch))
 			{
-				printf("\nSeveral words of letter: %c\n", letter);
+				printf("\nSeveral words of letter: %c.\n", letter);
 				add_letter_to_floor(letter, root, notch);
 				several_candidats++;
 			}
 			else
 			{
 				add_remainer_to_floor(s_tab, scanned_word_index, root, notch);
-				printf("added remainder. s_tab->tab[scanned_word_index] is now NULL: %s\n", s_tab->tab[scanned_word_index] == NULL ? "TRUE", "FALSE");
+				printf("added remainder. s_tab->tab[scanned_word_index] is now NULL: %s.\n", s_tab->tab[scanned_word_index] == NULL ? "TRUE" : "FALSE");
 				if (s_tab->tab[scanned_word_index])
 					exit(0);
 			}
 			letter = get_next_letter(s_tab, notch, &scanned_word_index, root);
-			printf("letter updated. scanned_word_index = %u. Letter = %c\n", scanned_word_index, (letter ? letter : '0'));
+			printf("letter updated. scanned_word_index = %u. Letter = %c.\n", scanned_word_index, (letter ? letter : '0'));
 		}
-		printf("No more letter on floor: %u. Going %s one floor\n", notch, (several_candidats ? "down" : "up"));
+		printf("No more letter on floor: %u. Going %s one floor.\n", notch, (several_candidats ? "down" : "up"));
 		several_candidats ? notch++ : notch--;
 		scanned_word_index = 0;
 		letter = get_next_letter(s_tab, notch, &scanned_word_index, root);
@@ -145,7 +145,7 @@ BOOL	is_word_in_tree(const char *word, UCHAR word_len, t_word_tree *root)
 	{
 		if (((t_word_tree*)(root->kids[i]))->letter == word[notch])
 		{
-			printf("letter '%c' matched.\n");
+			printf("letter '%c' matched.\n", word[notch]);
 			if (notch == word_len)
 				return TRUE;
 			notch++;
@@ -154,7 +154,7 @@ BOOL	is_word_in_tree(const char *word, UCHAR word_len, t_word_tree *root)
 		}
 		else
 		{
-			printf("No match for letter: %c\n", ((t_word_tree*)(root->kids[i]))->letter);
+			printf("No match for letter: %c.\n", ((t_word_tree*)(root->kids[i]))->letter);
 			i++;
 			if (root->kids_nb == i)
 			{

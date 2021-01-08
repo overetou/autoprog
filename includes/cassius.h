@@ -22,7 +22,7 @@ typedef struct	s_master
 typedef struct	s_string_tab
 {
 	char	**tab;
-	int		cell_number;
+	UINT	cell_number;
 }				t_string_tab;
 
 typedef struct	s_word_tree
