@@ -80,7 +80,7 @@ static void process_args(int argc,	const char **argv, t_master *m)
 	}
 }
 
-int main(int argc, char const *argv[])
+/* int main(int argc, char const *argv[])
 {
 	t_master m;
 
@@ -88,4 +88,28 @@ int main(int argc, char const *argv[])
 	m.to_exec(&m);
 	puts("\nSuccess.");
 	return 0;
+} */
+
+int	main(void)
+{
+	char *to_store[] = {"test", "mangekyou", "tintouin", "bernard", "berni", "gorille", "benzema"};
+	t_string_tab tab;
+	t_word_tree *tree;
+
+	puts("Trying to build the tree.");
+	tab.cell_number = 7;
+	tab.tab = to_store;
+	tree = word_tree(&tab);
+
+	puts("Tree built. Beginning search test.");
+	puts(is_word_in_tree("tintouin", sizeof("tintouin"), tree) ? "Ok" : "Failure");
+	puts(!is_word_in_tree("bertouin", sizeof("bertouin"), tree) ? "Ok" : "Failure");
+	puts(is_word_in_tree("test", sizeof("test"), tree) ? "Ok" : "Failure");
+	puts(is_word_in_tree("bernard", sizeof("bernard"), tree) ? "Ok" : "Failure");
+	puts(is_word_in_tree("gorille", sizeof("gorille"), tree) ? "Ok" : "Failure");
+	puts(is_word_in_tree("benzema", sizeof("benzema"), tree) ? "Ok" : "Failure");
+	puts(!is_word_in_tree("bernar", sizeof("bernar"), tree) ? "Ok" : "Failure");
+	puts(!is_word_in_tree("bernardo", sizeof("bernardo"), tree) ? "Ok" : "Failure");
+	is_word_in_tree("", 0, tree);
+	puts("Test succeeded.");
 }

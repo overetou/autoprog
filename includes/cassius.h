@@ -27,10 +27,16 @@ typedef struct	s_string_tab
 
 typedef struct	s_word_tree
 {
-	char				letter;
-	struct s_word_tree	**kids;
-	UCHAR				kids_nb;
+	char	letter;
+	void	**kids;
+	UCHAR	kids_nb;
 }				t_word_tree;
+
+typedef	struct	s_remainer
+{
+	char	fake_letter;//must always be 0
+	char	*remainer;
+}				t_remainer;
 
 void tidy_prototypes(t_master *m);
 void critical_test(char bool_val, const char *msg);
@@ -43,5 +49,9 @@ void 	print_string_tab(t_string_tab *protos);
 UINT next_line_offset(const char *s, UINT i);
 BOOL strcmp_on_n(const char *s1, const char *s2, int n);
 BOOL strcmp_n(const char *s1, int s1_size, const char *s2, int s2_size);
+
+//word_tree
+t_word_tree	*word_tree(t_string_tab *s_tab);
+BOOL	is_word_in_tree(const char *word, UCHAR word_len, t_word_tree *root);
 
 #endif
