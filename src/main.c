@@ -103,8 +103,8 @@ char *new_string(const char *s)
 
 t_string_tab	*new_string_tab(UINT cell_number)
 {
-	t_string_tab *t = malloc(sizeof(t_string_tab) * cell_number);
-	t->tab = (char**)(t + sizeof(t_string_tab));
+	t_string_tab *t = malloc(sizeof(t_string_tab) + cell_number * sizeof(char*));
+	t->tab = ((void*)t) + sizeof(t_string_tab);
 	t->cell_number = cell_number;
 	return (t);
 }
