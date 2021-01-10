@@ -326,6 +326,7 @@ void	delete_tree_end(t_word_tree *parent_branch, UINT remainer_pos)
 		{
 			if (parent->kids_nb == 1)
 			{
+				puts("Detected a letter branch to delete.");
 				free(parent_branch->kids);
 				free(parent_branch);
 				parent_branch = parent;
@@ -344,5 +345,8 @@ void	delete_tree_end(t_word_tree *parent_branch, UINT remainer_pos)
 		free(parent_branch);
 	}
 	else
+	{
 		reduce_child_set(parent_branch, remainer_pos);
+		printf("Reduced child set to size: %u.\n", parent_branch->kids_nb);
+	}
 }

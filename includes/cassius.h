@@ -52,7 +52,7 @@ typedef struct	s_floor_data
 void tidy_prototypes(t_master *m);
 void critical_test(char bool_val, const char *msg);
 BOOL is_dot(const char *s, const char c);
-BOOL is_alpha(const char c);
+BOOL is_word_material(const char c);
 UINT file_len(int fd);
 BOOL is_sep(const char c);
 void strcpy_len(const char *src, char *dest, UINT len);

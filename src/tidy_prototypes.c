@@ -28,7 +28,7 @@ static void	store_proto_names(const char *file_name, t_string_tab *protos)
 	close(fd);
 	while (content[i])
 	{
-		if (is_alpha(content[i]))
+		if (is_word_material(content[i]))
 		{
 			start = pass_non_types(content, i, len);
 			i = next_line_offset(content, i);
@@ -80,7 +80,7 @@ static UINT	next_func_call(const char *s, UINT *pos, UINT *len)
 
 	while (!s[i] || s[i] == '\n')
 	{
-		while (!is_alpha(s[i]))
+		while (!is_word_material(s[i]))
 		{
 			i++;
 			if (!s[i] || s[i] == '\n')
@@ -90,7 +90,7 @@ static UINT	next_func_call(const char *s, UINT *pos, UINT *len)
 			}
 		}
 		start = i;
-		while(is_alpha(s[i++]));
+		while(is_word_material(s[i++]));
 		if (s[i] == '(')
 		{
 			*pos += start;
@@ -131,7 +131,7 @@ static void	add_extrafile_funcs(const char *file_name, UINT **interfile_funcs, U
 				{
 					printf("Found a matching prototype out of the current file. The number of public func will now be: %u. It's pos is: %u\n", (*interfile_func_nb) + 1, ((t_remainer*)(parent_branch->kids[remainer_pos]))->pos);
 					*interfile_funcs = realloc(*interfile_funcs, sizeof(UINT) * ((*interfile_func_nb) + 1));
-					interfile_funcs[(*interfile_func_nb)] = ((t_remainer*)(parent_branch->kids[remainer_pos]))->pos;
+					(*interfile_funcs)[(*interfile_func_nb)] = ((t_remainer*)(parent_branch->kids[remainer_pos]))->pos;
 					(*interfile_func_nb)++;
 					puts("Deleting the remainer and every branch above it that will consequently be left with no children.");
 					delete_tree_end(parent_branch, remainer_pos);
@@ -200,7 +200,7 @@ static	void extract_prototypes(t_string_tab *protos, UINT *file_limits)
 		file_limits[i] = protos->cell_number + 1;
 		closedir(d);
 	}
-	print_string_tab(&protos);
+	print_string_tab(protos);
 }
 
 void	tidy_prototypes(t_master *m)

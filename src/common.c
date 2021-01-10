@@ -50,9 +50,9 @@ UINT get_dir_files_number()
 	return (res);
 }
 
-BOOL is_alpha(const char c)
+BOOL is_word_material(const char c)
 {
-	return ((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z'));
+	return ((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || c == '_');
 }
 
 BOOL is_sep(const char c)
@@ -94,7 +94,7 @@ UINT	get_word_len(const char *s)
 {
 	UINT	i = 0;
 
-	while(is_alpha(s[i]))
+	while(is_word_material(s[i]))
 		i++;
 	return (i);
 }
