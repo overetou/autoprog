@@ -3,9 +3,6 @@
 #include <unistd.h>
 
 /*
-Critical bug:
-	if you store "bernard" in the tree and ask if "ber" is in it, it will say that it is so.
-	By the way, what happens if you enter ["bernard", "berni", "ber"]? We have to signal that a full word is stored at this point but not elsewhere.
 Possible ameliorations:
 	Store the length of remainers beside them to avoid recomputing it each time they are assessed.
 	Reorder the given s_tab by likedness, to just jump over the transfered ones on upper floors.
@@ -230,7 +227,7 @@ BOOL	is_word_in_tree(const char *word, UCHAR word_len, t_word_tree *root)
 	UINT	notch = 0, i = 0;
 
 	puts("Beginning search for:");write(1, word, word_len);putchar('\n');
-	while (notch != word_len)
+	while (i != root->kids_nb)
 	{
 		if (((t_word_tree*)(root->kids[i]))->letter)
 		{
@@ -259,8 +256,6 @@ BOOL	is_word_in_tree(const char *word, UCHAR word_len, t_word_tree *root)
 			i++;
 			printf("No match. Increasing i to %u. Still %u chances to match.\n", i, root->kids_nb - i);
 		}
-		if (i == root->kids_nb)
-			return (FALSE);
 		printf("Notch = %u, word_len = %u.\n", notch, word_len);
 	}
 	return (FALSE);
