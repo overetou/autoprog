@@ -26,7 +26,7 @@ Possible ameliorations:
 
 //logic
 
-static t_word_tree	*create_letter_branch(char content)
+static t_word_tree	*create_letter_branch(char content, t_word_tree *parent)
 {
 	//printf("malloc of %lu in branch.\n", sizeof(t_word_tree));
 	t_word_tree	*branch = malloc(sizeof(t_word_tree));
@@ -37,6 +37,7 @@ static t_word_tree	*create_letter_branch(char content)
 		//printf("branch kids nb of new branch was set to %u.\n", branch->kids_nb);
 		branch->letter = content;
 		//printf("branch letter: %c.\n", branch->letter);
+		branch->parent = parent;
 		return (branch);
 	}
 	else
@@ -103,7 +104,7 @@ t_floor_data	*add_floor_data(t_floor_data *data_set, UINT notch, UINT count)
 		exit(0);
 	}
 	//printf("Creating a letter branch with letter %c. data_set->parent_branch->kids_nb will then be %u.\n", data_set->s_tab->tab[data_set->pos][notch], data_set->parent_branch->kids_nb + 1);
-	data_set->parent_branch->kids[data_set->parent_branch->kids_nb]	= create_letter_branch(data_set->s_tab->tab[data_set->pos][notch]);
+	data_set->parent_branch->kids[data_set->parent_branch->kids_nb]	= create_letter_branch(data_set->s_tab->tab[data_set->pos][notch], data_set->parent_branch);
 	(data_set->parent_branch->kids_nb)++;
 	t->tab[0] = data_set->s_tab->tab[data_set->pos];
 	//printf("Added %s to the s_tab of the kid branch to be. (at index 0). We have %u concurrents to find.\n", t->tab[0], count);
@@ -123,7 +124,7 @@ t_floor_data	*add_floor_data(t_floor_data *data_set, UINT notch, UINT count)
 	return (new_floor_data(t, data_set->parent_branch->kids[data_set->parent_branch->kids_nb - 1]));
 }
 
-t_remainer *create_remainer(char *s)
+t_remainer *create_remainer(char *s, UINT pos)
 {
 	UINT	len = strlen(s);
 	t_remainer *res = malloc(sizeof(t_remainer) + len + 1);
@@ -139,6 +140,7 @@ t_remainer *create_remainer(char *s)
 	strcpy_len(s, res->remainer, len);
 	res->remainer[len] = '\0';
 	res->len = len;
+	res->pos = pos;
 	//printf("res->remainer = %s\nDone. Returning res.\n", res->remainer);
 	return (res);
 }
@@ -154,7 +156,7 @@ void	add_remainer(t_floor_data *data_set, UINT notch)
 		exit(0);
 	}
 	//printf("Putting a remainer inside data_set->parent_branch->kids[%u].\n", data_set->parent_branch->kids_nb);
-	data_set->parent_branch->kids[data_set->parent_branch->kids_nb] = create_remainer(data_set->s_tab->tab[data_set->pos] + notch);
+	data_set->parent_branch->kids[data_set->parent_branch->kids_nb] = create_remainer(data_set->s_tab->tab[data_set->pos] + notch, data_set->pos);
 	(data_set->parent_branch->kids_nb)++;
 }
 
@@ -176,7 +178,7 @@ BOOL	is_count_relevant(t_floor_data *data_set, UINT notch)
 
 t_word_tree	*word_tree(t_string_tab *s_tab)
 {
-	t_word_tree		*root = create_letter_branch('.');
+	t_word_tree		*root = create_letter_branch('.', NULL);
 	UINT			notch = 0, count;
 	t_floor_data	*data_sets, *temp;
 
@@ -222,7 +224,8 @@ t_word_tree	*word_tree(t_string_tab *s_tab)
 	return (root);
 }
 
-BOOL	is_word_in_tree(const char *word, UCHAR word_len, t_word_tree *root)
+//Pos is the position of the word in discover order.
+BOOL	is_word_in_tree(const char *word, UCHAR word_len, t_word_tree *root, UINT *pos)
 {
 	UINT	notch = 0, i = 0;
 
@@ -251,6 +254,7 @@ BOOL	is_word_in_tree(const char *word, UCHAR word_len, t_word_tree *root)
 			if (strcmp_n(word + notch, word_len - notch, ((t_remainer*)(root->kids[i]))->remainer, ((t_remainer*)(root->kids[i]))->len))
 			{
 				//puts("The remainer matched.");
+				*pos = ((t_remainer*)(root->kids[i]))->pos;
 				return (TRUE);
 			}
 			i++;
@@ -259,4 +263,86 @@ BOOL	is_word_in_tree(const char *word, UCHAR word_len, t_word_tree *root)
 		//printf("Notch = %u, word_len = %u.\n", notch, word_len);
 	}
 	return (FALSE);
+}
+
+t_word_tree	*get_word_info_from_tree(const char *word, UCHAR word_len, t_word_tree *root, UINT *remainer_pos)
+{
+	UINT	notch = 0, i = 0;
+
+	//puts("Beginning search for:");write(1, word, word_len);putchar('\n');
+	while (i != root->kids_nb)
+	{
+		if (((t_word_tree*)(root->kids[i]))->letter)
+		{
+			//printf("Comparing with letter %c.\n", ((t_word_tree*)(root->kids[i]))->letter);
+			if (word[notch] == ((t_word_tree*)(root->kids[i]))->letter)
+			{
+				//puts("The letter matched.");
+				notch++;
+				root = root->kids[i];
+				i = 0;
+			}
+			else
+			{
+				i++;
+				//printf("No match. Increasing i to %u. Still %u chances to match.\n", i, root->kids_nb - i);
+			}
+		}
+		else
+		{
+			//printf("Comparing with remainer: %s\n", ((t_remainer*)(root->kids[i]))->remainer);
+			if (strcmp_n(word + notch, word_len - notch, ((t_remainer*)(root->kids[i]))->remainer, ((t_remainer*)(root->kids[i]))->len))
+			{
+				//puts("The remainer matched.");
+				*remainer_pos = i;
+				return (root);
+			}
+			i++;
+			//printf("No match. Increasing i to %u. Still %u chances to match.\n", i, root->kids_nb - i);
+		}
+		//printf("Notch = %u, word_len = %u.\n", notch, word_len);
+	}
+	return (NULL);
+}
+
+static void	reduce_child_set(t_word_tree *branch, UINT pos)
+{
+	(branch->kids_nb)--;
+	while (pos != branch->kids_nb)
+	{
+		branch->kids[pos] = branch->kids[pos + 1];
+		pos++;
+	}
+}
+
+void	delete_tree_end(t_word_tree *parent_branch, UINT remainer_pos)
+{
+	t_word_tree *parent;
+
+	if (parent_branch->kids_nb == 1)
+	{
+		parent = parent_branch->parent;
+		while (parent)
+		{
+			if (parent->kids_nb == 1)
+			{
+				free(parent_branch->kids);
+				free(parent_branch);
+				parent_branch = parent;
+				parent = parent_branch->parent;
+			}
+			else
+			{
+				remainer_pos = 0;
+				while (parent->kids[remainer_pos] != parent_branch)
+					remainer_pos++;
+				reduce_child_set(parent, remainer_pos);
+				break;
+			}
+		}
+		free(parent_branch->kids);
+		free(parent_branch);
+	}
+	else
+		reduce_child_set(parent_branch, remainer_pos);
 }

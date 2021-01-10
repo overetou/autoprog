@@ -1,5 +1,6 @@
 #include "cassius.h"
 #include <unistd.h>
+#include <dirent.h>
 
 BOOL strcmp_on_n(const char *s1, const char *s2, int n)
 {
@@ -27,6 +28,25 @@ UINT file_len(int fd)
 {
 	UINT res = lseek(fd, 0, SEEK_END);
 	lseek(fd, 0, SEEK_SET);
+	return (res);
+}
+
+UINT get_dir_files_number()
+{
+	DIR *d;
+	struct dirent *dir;
+	UINT	res = 0;
+
+	d = opendir(".");
+	if (d)
+	{
+		while ((dir = readdir(d)) != NULL)
+		{
+			if (dir->d_type == DT_REG && is_dot(dir->d_name, 'c'))
+				res++;
+		}
+		closedir(d);
+	}
 	return (res);
 }
 
