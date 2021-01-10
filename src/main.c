@@ -20,7 +20,7 @@ BOOL strcmp_n(const char *s1, int s1_size, const char *s2, int s2_size)
 {
 	int i;
 
-	printf("Comparing %s of size %u and %s of size %u.\n", s1, s1_size, s2, s2_size);
+	//printf("Comparing %s of size %u and %s of size %u.\n", s1, s1_size, s2, s2_size);
 	if (s1_size != s2_size)
 		return (0);
 	i = 0;
@@ -42,7 +42,7 @@ int slen(const char *s)
 	return (i);
 }
 
-/* static void process_command(int argc, const char **argv, t_master *m, int len, int i)
+static void process_command(int argc, const char **argv, t_master *m, int len, int i)
 {
 	critical_test(strcmp_n(argv[i], len, "tidy", 4), "Invalid command.");
 	i++;
@@ -89,7 +89,7 @@ int main(int argc, char const *argv[])
 	m.to_exec(&m);
 	puts("\nSuccess.");
 	return 0;
-} */
+}
 
 char *new_string(const char *s)
 {
@@ -122,6 +122,8 @@ void			free_string_tab(t_string_tab *to_free)
 	free(to_free);
 }
 
+
+/* //This is a test for the word tree builder and searcher.
 int	main(void)
 {
 	t_string_tab *tab = new_string_tab(9);
@@ -154,4 +156,4 @@ int	main(void)
 	puts(!is_word_in_tree("be", sizeof("be") - 1, tree) ? "Ok" : "Failure");
 	is_word_in_tree("", 0, tree);
 	puts("Test succeeded.");
-}
+} */

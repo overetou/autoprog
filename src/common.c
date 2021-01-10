@@ -69,3 +69,21 @@ void 	print_string_tab(t_string_tab *protos)
 		i++;
 	}
 }
+
+UINT	get_word_len(const char *s)
+{
+	UINT	i = 0;
+
+	while(is_alpha(s[i]))
+		i++;
+	return (i);
+}
+
+UINT	get_sep_len(const char *s)
+{
+	UINT	i = 0;
+
+	while(is_sep(s[i]))
+		i++;
+	return (i);
+}
