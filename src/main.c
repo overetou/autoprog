@@ -20,6 +20,7 @@ BOOL strcmp_n(const char *s1, int s1_size, const char *s2, int s2_size)
 {
 	int i;
 
+	printf("Comparing %s of size %u and %s of size %u.\n", s1, s1_size, s2, s2_size);
 	if (s1_size != s2_size)
 		return (0);
 	i = 0;
@@ -138,14 +139,15 @@ int	main(void)
 	tree = word_tree(tab);
 
 	puts("Tree built. Beginning search test.");
-	puts(is_word_in_tree("tintouin", sizeof("tintouin"), tree) ? "Ok" : "Failure");
-	puts(!is_word_in_tree("bertouin", sizeof("bertouin"), tree) ? "Ok" : "Failure");
-	puts(is_word_in_tree("test", sizeof("test"), tree) ? "Ok" : "Failure");
-	puts(is_word_in_tree("bernard", sizeof("bernard"), tree) ? "Ok" : "Failure");
-	puts(is_word_in_tree("gorille", sizeof("gorille"), tree) ? "Ok" : "Failure");
-	puts(is_word_in_tree("benzema", sizeof("benzema"), tree) ? "Ok" : "Failure");
-	puts(!is_word_in_tree("bernar", sizeof("bernar"), tree) ? "Ok" : "Failure");
-	puts(!is_word_in_tree("bernardo", sizeof("bernardo"), tree) ? "Ok" : "Failure");
+	puts(is_word_in_tree("tintouin", sizeof("tintouin") - 1, tree) ? "Ok" : "Failure");
+	puts(!is_word_in_tree("bertouin", sizeof("bertouin") - 1, tree) ? "Ok" : "Failure");
+	puts(is_word_in_tree("test", sizeof("test") - 1, tree) ? "Ok" : "Failure");
+	puts(is_word_in_tree("bernard", sizeof("bernard") - 1, tree) ? "Ok" : "Failure");
+	puts(is_word_in_tree("gorille", sizeof("gorille") - 1, tree) ? "Ok" : "Failure");
+	puts(is_word_in_tree("benzema", sizeof("benzema") - 1, tree) ? "Ok" : "Failure");
+	puts(!is_word_in_tree("bernar", sizeof("bernar") - 1, tree) ? "Ok" : "Failure");
+	puts(!is_word_in_tree("bernardo", sizeof("bernardo") - 1, tree) ? "Ok" : "Failure");
+	puts(!is_word_in_tree("ber", sizeof("ber") - 1, tree) ? "Ok" : "Failure");
 	is_word_in_tree("", 0, tree);
 	puts("Test succeeded.");
 }

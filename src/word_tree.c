@@ -2,6 +2,15 @@
 #include <string.h>
 #include <unistd.h>
 
+/*
+Critical bug:
+	if you store "bernard" in the tree and ask if "ber" is in it, it will say that it is so.
+	By the way, what happens if you enter ["bernard", "berni", "ber"]? We have to signal that a full word is stored at this point but not elsewhere.
+Possible ameliorations:
+	Store the length of remainers beside them to avoid recomputing it each time they are assessed.
+	Reorder the given s_tab by likedness, to just jump over the transfered ones on upper floors.
+*/
+
 //printing
 
 void	print_parent_branch(t_word_tree *b)
@@ -68,8 +77,7 @@ UINT	count_concurrents(t_floor_data *data_set, UINT notch)
 {
 	UINT	i, count = 0;
 
-	while(data_set->pos != data_set->s_tab->cell_number && data_set->s_tab->tab[data_set->pos][notch] == '.')
-		(data_set->pos)++;
+	printf("Locked: %s.\n", data_set->s_tab->tab[data_set->pos]);
 	i = data_set->pos + 1;
 	printf("\nCounting with notch on %u. data_set->pos = %u and i = %u.\n", notch, data_set->pos, i);
 	while (i != data_set->s_tab->cell_number)
@@ -153,9 +161,25 @@ void	add_remainer(t_floor_data *data_set, UINT notch)
 	(data_set->parent_branch->kids_nb)++;
 }
 
+BOOL	is_count_relevant(t_floor_data *data_set, UINT notch)
+{
+ 	UINT	max_relevant = data_set->s_tab->cell_number - 1;
+
+	printf("Skipping already stored: %c == '.'?", data_set->s_tab->tab[data_set->pos][notch]);
+	while(data_set->s_tab->tab[data_set->pos][notch] == '.')
+	{
+		if (data_set->pos == max_relevant)
+			return (FALSE);
+		(data_set->pos)++;
+		if (data_set->pos != max_relevant)
+			printf("Skipping already stored: %c == '.'?", data_set->s_tab->tab[data_set->pos][notch]);
+	}
+	return (TRUE);
+}
+
 t_word_tree	*word_tree(t_string_tab *s_tab)
 {
-	t_word_tree		*root = create_letter_branch('\0');
+	t_word_tree		*root = create_letter_branch('.');
 	UINT			notch = 0, count;
 	t_floor_data	*data_sets, *temp;
 
@@ -167,22 +191,27 @@ t_word_tree	*word_tree(t_string_tab *s_tab)
 		printf("About to test: %u != %u. (data_sets->pos != data_sets->s_tab->cell_number)\n", data_sets->pos, data_sets->s_tab->cell_number);
 		while (data_sets->pos != data_sets->s_tab->cell_number)
 		{
-			printf("Locked: %s.\n", data_sets->s_tab->tab[data_sets->pos]);
-			count = count_concurrents(data_sets, notch);
-			if (count)
+			if (is_count_relevant(data_sets, notch))
 			{
-				temp = add_floor_data(data_sets, notch, count);
-				temp->next = data_sets;
-				data_sets = temp;
-				notch++;
-				printf("Added a data pack. Notch is now %u.\n", notch);
+				count = count_concurrents(data_sets, notch);
+				if (count)
+				{
+					temp = add_floor_data(data_sets, notch, count);
+					temp->next = data_sets;
+					(data_sets->pos)++;
+					data_sets = temp;
+					notch++;
+					printf("Added a data pack. Notch is now %u.\n", notch);
+				}
+				else
+				{
+					add_remainer(data_sets, notch);
+					printf("\"%s\" is well stored in the tree. New pos of current data pack = %u.\n", ((t_remainer*)(data_sets->parent_branch->kids[(data_sets->parent_branch->kids_nb) - 1]))->remainer, data_sets->pos + 1);
+					(data_sets->pos)++;
+				}
 			}
 			else
-			{
-				add_remainer(data_sets, notch);
-				printf("\"%s\" is well stored in the tree. New pos of current data pack = %u.\n", ((t_remainer*)(data_sets->parent_branch->kids[(data_sets->parent_branch->kids_nb) - 1]))->remainer, data_sets->pos + 1);
-			}
-				(data_sets->pos)++;
+				break;
 			printf("About to test: %u != %u. (data_sets->pos != data_sets->s_tab->cell_number)\n", data_sets->pos, data_sets->s_tab->cell_number);
 		}
 		temp = data_sets;
@@ -192,7 +221,7 @@ t_word_tree	*word_tree(t_string_tab *s_tab)
 		notch--;
 		printf("Freed a data pack. Notch is now %u.\n", notch);
 	}
-	puts("Done! Don't forget to free your string_tab!\n");
+	puts("Done! Don't forget to free your string_tab! (And don't fret by seeing the notch at 4294967295 just above. It's 0 - 1\n");
 	return (root);
 }
 
@@ -201,27 +230,38 @@ BOOL	is_word_in_tree(const char *word, UCHAR word_len, t_word_tree *root)
 	UINT	notch = 0, i = 0;
 
 	puts("Beginning search for:");write(1, word, word_len);putchar('\n');
-	while (root->letter)
+	while (notch != word_len)
 	{
-		if (((t_word_tree*)(root->kids[i]))->letter == word[notch])
+		if (((t_word_tree*)(root->kids[i]))->letter)
 		{
-			printf("letter '%c' matched.\n", word[notch]);
-			if (notch == word_len)
-				return TRUE;
-			notch++;
-			root = root->kids[i];
-			i = 0;
+			printf("Comparing with letter %c.\n", ((t_word_tree*)(root->kids[i]))->letter);
+			if (word[notch] == ((t_word_tree*)(root->kids[i]))->letter)
+			{
+				puts("The letter matched.");
+				notch++;
+				root = root->kids[i];
+				i = 0;
+			}
+			else
+			{
+				i++;
+				printf("No match. Increasing i to %u. Still %u chances to match.\n", i, root->kids_nb - i);
+			}
 		}
 		else
 		{
-			printf("No match for letter: %c.\n", ((t_word_tree*)(root->kids[i]))->letter);
-			i++;
-			if (root->kids_nb == i)
+			printf("Comparing with remainer: %s\n", ((t_remainer*)(root->kids[i]))->remainer);
+			if (strcmp_n(word + notch, word_len - notch, ((t_remainer*)(root->kids[i]))->remainer, strlen(((t_remainer*)(root->kids[i]))->remainer)))
 			{
-				puts("No more available letter at this floor. No match.");
-				return FALSE;
+				puts("The remainer matched.");
+				return (TRUE);
 			}
+			i++;
+			printf("No match. Increasing i to %u. Still %u chances to match.\n", i, root->kids_nb - i);
 		}
+		if (i == root->kids_nb)
+			return (FALSE);
+		printf("Notch = %u, word_len = %u.\n", notch, word_len);
 	}
-	return (strcmp_n(word + notch, word_len - notch, ((t_remainer*)root)->remainer, strlen(((t_remainer*)root)->remainer)));
+	return (FALSE);
 }
