@@ -36,6 +36,7 @@ typedef	struct	s_remainer
 {
 	char	fake_letter;//must always be 0
 	char	*remainer;
+	UINT	len;
 }				t_remainer;
 
 typedef struct	s_floor_data

@@ -4,7 +4,6 @@
 
 /*
 Possible ameliorations:
-	Store the length of remainers beside them to avoid recomputing it each time they are assessed.
 	Reorder the given s_tab by likedness, to just jump over the transfered ones on upper floors.
 */
 
@@ -139,6 +138,7 @@ t_remainer *create_remainer(char *s)
 	res->remainer = ((void*)res) + sizeof(t_remainer);
 	strcpy_len(s, res->remainer, len);
 	res->remainer[len] = '\0';
+	res->len = len;
 	printf("res->remainer = %s\nDone. Returning res.\n", res->remainer);
 	return (res);
 }
@@ -248,7 +248,7 @@ BOOL	is_word_in_tree(const char *word, UCHAR word_len, t_word_tree *root)
 		else
 		{
 			printf("Comparing with remainer: %s\n", ((t_remainer*)(root->kids[i]))->remainer);
-			if (strcmp_n(word + notch, word_len - notch, ((t_remainer*)(root->kids[i]))->remainer, strlen(((t_remainer*)(root->kids[i]))->remainer)))
+			if (strcmp_n(word + notch, word_len - notch, ((t_remainer*)(root->kids[i]))->remainer, ((t_remainer*)(root->kids[i]))->len))
 			{
 				puts("The remainer matched.");
 				return (TRUE);
