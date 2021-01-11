@@ -19,9 +19,8 @@ static UINT	pass_non_types(const char *content, UINT i, const UINT len)
 static void	store_proto_names(const char *file_name, t_string_tab *protos)
 {
 	int fd = open(file_name, O_RDONLY);
-	UINT len = file_len(fd);
+	UINT len = file_len(fd), i = 0, start, prot_len;
 	char *content = malloc(len + 1);
-	UINT i = 0, start;
 
 	read(fd, content, len);
 	content[len] = '\0';
@@ -32,18 +31,23 @@ static void	store_proto_names(const char *file_name, t_string_tab *protos)
 		{
 			start = pass_non_types(content, i, len);
 			i = next_line_offset(content, i);
+			printf("Proto detected. start: %c, end: %c.\n", content[start], content[i]);
 			if (content[i] == '{')
 			{
+				prot_len = i - start - 1;
 				protos->tab = realloc(protos->tab, (protos->cell_number + 1) * sizeof(char*));
-				protos->tab[protos->cell_number] = malloc(i - start + 1);
-				strcpy_len(content + start, protos->tab[protos->cell_number], i - start - 1);
-				protos->tab[protos->cell_number][i - start - 2] = ';';
-				protos->tab[protos->cell_number][i - start - 1] = '\0';
-				protos->cell_number++;
+				protos->tab[protos->cell_number] = malloc(prot_len + 2);
+				strcpy_len(content + start, protos->tab[protos->cell_number], prot_len);
+				protos->tab[protos->cell_number][prot_len] = ';';
+				protos->tab[protos->cell_number][prot_len + 1] = '\0';
+				(protos->cell_number)++;
 			}
 		}
 		else
+		{
+			//printf("i = %u, max = %u\n ", i, len);
 			i = next_line_offset(content, i);
+		}
 	}
 	free(content);
 }
@@ -194,6 +198,7 @@ static	void extract_prototypes(t_string_tab *protos, UINT *file_limits)
 			if (dir->d_type == DT_REG && is_dot(dir->d_name, 'c'))
 			{
 				file_limits[i++] = protos->cell_number;
+				printf("Currently parsed file = %s\n", dir->d_name);
 				store_proto_names(dir->d_name, protos);
 			}
 		}
@@ -211,16 +216,24 @@ void	tidy_prototypes(t_master *m)
 
 	puts("Detected prototypes:");
 	critical_test(chdir("src") == 0, "You must be at the root of your project. Your source folder must be named src.");
-	file_limits = malloc(sizeof(UINT) * get_dir_files_number());
+	//puts("step 2");
+	file_limits = malloc(sizeof(UINT) * (get_dir_files_number() + 1));
+	//puts("step 3");
 	extract_prototypes(&protos, file_limits);
+	//puts("step 4");
 	tree = create_func_names_tree(&protos);
+	//puts("step 5");
 	i = search_interfile_funcs(tree, &file_limits);
 	//search for their prototype in the .h
 	//if they are not in there, add them.
+	//puts("step 6");
 	i = 0;
+	//puts("step 7");
 	while (i != protos.cell_number)
 		free(protos.tab[i++]);
+	//puts("step 8");
 	free(protos.tab);
+	//puts("step 9");
 	if (m->ft)
 		puts("42 mode is not implemented yet. The generated prototypes may be too long, so you will still have to split them on two lines by yourself.");
 }

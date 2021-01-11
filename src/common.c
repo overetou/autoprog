@@ -73,9 +73,13 @@ void strcpy_len(const char *src, char *dest, UINT len)
 
 UINT next_line_offset(const char *s, UINT i)
 {
-	while (s[i] && s[i] != '\n')
+	while (s[i])
+	{
+		if (s[i] == '\n')
+			return(i + 1);
 		i++;
-	return (i + 1);
+	}
+	return (i);
 }
 
 void 	print_string_tab(t_string_tab *protos)
