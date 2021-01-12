@@ -1,4 +1,5 @@
 #include "cassius.h"
+#include <stdio.h>
 #include <unistd.h>
 #include <dirent.h>
 #include <stdlib.h>
@@ -31,7 +32,7 @@ static void	store_proto_names(const char *file_name, t_string_tab *protos)
 		{
 			start = pass_non_types(content, i, len);
 			i = next_line_offset(content, i);
-			printf("Proto detected. start: %c, end: %c.\n", content[start], content[i]);
+			//printf("Proto detected. start: %c, end: %c.\n", content[start], content[i]);
 			if (content[i] == '{')
 			{
 				prot_len = i - start - 1;
@@ -58,21 +59,28 @@ t_word_tree	*create_func_names_tree(t_string_tab *proto_tab)
 	t_string_tab	*names = new_string_tab(proto_tab->cell_number);
 	t_word_tree		*res;
 
+	//printf("there are %u available name spaces.\n", names->cell_number);
 	//create func names string tab
 	while (i != names->cell_number)
 	{
 		len = get_word_len(proto_tab->tab[i]);
 		len += get_sep_len(proto_tab->tab[i] + len);
 		func_name_len = get_word_len(proto_tab->tab[i] + len);
-		puts("Adding to the s_tab for the tree the name:");
-		write(1, proto_tab->tab[i] + len, func_name_len);
+		//puts("Adding to the s_tab for the tree the name:");
+		//write(1, proto_tab->tab[i] + len, func_name_len);putchar('\n');
+		//printf("func name len = %u.\n", func_name_len);
 		names->tab[i] = malloc(func_name_len + 1);
-		strcpy_len(names->tab[i], proto_tab->tab[i] + len, func_name_len);
-		names->tab[func_name_len] = '\0';
+		critical_test(names->tab[i] != NULL, "Malloc failed.");
+		strcpy_len(proto_tab->tab[i] + len, names->tab[i], func_name_len);
+	//	printf("names->tab[i] = %s\n", names->tab[i]);
+		names->tab[i][func_name_len] = '\0';
 		i++;
 	}
+	//puts("Func names:");
+	//print_string_tab(names);
 	//build the tree here.
 	res = word_tree(names);
+	exit(0);
 	free_string_tab(names);
 	puts("Finished builing the tree.");
 	return (res);
@@ -114,7 +122,7 @@ static BOOL	is_outside_of_current_file(UINT pos, UINT *file_limits)
 static void	add_extrafile_funcs(const char *file_name, UINT **interfile_funcs, UINT *interfile_func_nb, UINT *file_limits, t_word_tree *tree)
 {
 	int fd = open(file_name, O_RDONLY);
-	UINT len = file_len(fd), i = 0, remainer_pos;
+	UINT len = file_len(fd), i = 0, remainer_pos, line = 0;
 	char *content = malloc(len + 1);
 	t_word_tree *parent_branch;
 
@@ -125,11 +133,11 @@ static void	add_extrafile_funcs(const char *file_name, UINT **interfile_funcs, U
 	{
 		if (is_sep(content[i]))
 		{
-			puts("trying a new line.");
 			if (next_func_call(content + i, &i, &len))
 			{
-				puts("A func call was found at:");
+				printf("A func call was found at line %u:", line);
 				write(1, content + i, len);putchar('\n');
+				exit(0);
 				parent_branch = get_word_info_from_tree(content, len, tree, &remainer_pos);
 				if (parent_branch && is_outside_of_current_file(((t_remainer*)(parent_branch->kids[remainer_pos]))->pos, file_limits))
 				{
@@ -143,7 +151,10 @@ static void	add_extrafile_funcs(const char *file_name, UINT **interfile_funcs, U
 			}
 		}
 		else
+		{
+			line++;
 			i = next_line_offset(content, i);
+		}
 	}
 	free(content);
 }
@@ -205,7 +216,8 @@ static	void extract_prototypes(t_string_tab *protos, UINT *file_limits)
 		file_limits[i] = protos->cell_number + 1;
 		closedir(d);
 	}
-	print_string_tab(protos);
+	//puts("Detected prototypes:");
+	//print_string_tab(protos);
 }
 
 void	tidy_prototypes(t_master *m)
@@ -214,13 +226,9 @@ void	tidy_prototypes(t_master *m)
 	t_word_tree *tree;
 	UINT		*file_limits, i;
 
-	puts("Detected prototypes:");
 	critical_test(chdir("src") == 0, "You must be at the root of your project. Your source folder must be named src.");
-	//puts("step 2");
 	file_limits = malloc(sizeof(UINT) * (get_dir_files_number() + 1));
-	//puts("step 3");
 	extract_prototypes(&protos, file_limits);
-	//puts("step 4");
 	tree = create_func_names_tree(&protos);
 	//puts("step 5");
 	i = search_interfile_funcs(tree, &file_limits);

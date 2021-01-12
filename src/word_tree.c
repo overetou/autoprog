@@ -1,5 +1,8 @@
 #include "cassius.h"
+#include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
+#include <sys/types.h>
 #include <unistd.h>
 
 /*
@@ -42,7 +45,7 @@ static t_word_tree	*create_letter_branch(char content, t_word_tree *parent)
 	}
 	else
 	{
-		//puts("Malloc failed.");
+		puts("Malloc failed.");
 		exit(0);
 	}
 }
@@ -65,7 +68,7 @@ t_floor_data	*new_floor_data(t_string_tab *s_tab, t_word_tree *parent_branch)
 	}
 	else
 	{
-		//puts("Malloc failed.");
+		puts("Malloc failed.");
 		exit(0);
 	}
 }
@@ -100,7 +103,7 @@ t_floor_data	*add_floor_data(t_floor_data *data_set, UINT notch, UINT count)
 	data_set->parent_branch->kids = realloc(data_set->parent_branch->kids, (data_set->parent_branch->kids_nb + 1) * sizeof(void*));
 	if (data_set->parent_branch->kids == NULL)
 	{
-		//puts("Realloc failed.");
+		puts("Realloc failed.");
 		exit(0);
 	}
 	//printf("Creating a letter branch with letter %c. data_set->parent_branch->kids_nb will then be %u.\n", data_set->s_tab->tab[data_set->pos][notch], data_set->parent_branch->kids_nb + 1);
@@ -126,12 +129,12 @@ t_floor_data	*add_floor_data(t_floor_data *data_set, UINT notch, UINT count)
 
 t_remainer *create_remainer(char *s, UINT pos)
 {
-	UINT	len = strlen(s);
+	UINT	len = slen(s);
 	t_remainer *res = malloc(sizeof(t_remainer) + len + 1);
 
 	if (res == NULL)
 	{
-		//puts("Malloc failed.");
+		puts("Malloc failed.");
 		exit(0);
 	}
 	//printf("create remainer begins. len = %u, malloc a size of %lu to put into res.\n", len, sizeof(t_remainer) + len);
@@ -152,7 +155,7 @@ void	add_remainer(t_floor_data *data_set, UINT notch)
 	data_set->parent_branch->kids = realloc(data_set->parent_branch->kids, (data_set->parent_branch->kids_nb + 1) * sizeof(void*));
 	if (data_set->parent_branch->kids == NULL)
 	{
-		//puts("Realloc failed.");
+		puts("Realloc failed.");
 		exit(0);
 	}
 	//printf("Putting a remainer inside data_set->parent_branch->kids[%u].\n", data_set->parent_branch->kids_nb);
@@ -160,19 +163,52 @@ void	add_remainer(t_floor_data *data_set, UINT notch)
 	(data_set->parent_branch->kids_nb)++;
 }
 
+UINT	debug_counter = 0;
+
 BOOL	is_count_relevant(t_floor_data *data_set, UINT notch)
 {
- 	UINT	max_relevant = data_set->s_tab->cell_number - 1;
-
-	//printf("Skipping already stored: %c == '.'?", data_set->s_tab->tab[data_set->pos][notch]);
-	while(data_set->s_tab->tab[data_set->pos][notch] == '.')
+	printf("debug counter = %u\n", debug_counter);
+	UINT	max_relevant = data_set->s_tab->cell_number - 1;
+	
+	if (debug_counter != 90)
 	{
-		if (data_set->pos == max_relevant)
-			return (FALSE);
-		(data_set->pos)++;
-		//if (data_set->pos != max_relevant)
-			//printf("Skipping already stored: %c == '.'?", data_set->s_tab->tab[data_set->pos][notch]);
+		//printf("is count relevant: notch = %u, max relevant = %u, cell number = %u.\n", notch, max_relevant, data_set->s_tab->cell_number);
+		//printf("current target = %s\n", data_set->s_tab->tab[data_set->pos]);
+		//printf("Skipping already stored: %c == '.'?", data_set->s_tab->tab[data_set->pos][notch]);
+		
+		while(data_set->s_tab->tab[data_set->pos][notch] == '.')
+		{
+			if (data_set->pos == max_relevant)
+			{
+				return (FALSE);
+			}
+			(data_set->pos)++;
+	//		if (data_set->pos != max_relevant)
+	//		{
+				//	printf("Skipping already stored: %c == '.'?\n", data_set->s_tab->tab[data_set->pos][notch]);
+	//		}
+		}
 	}
+	else
+	{
+		printf("is count relevant: notch = %u, max relevant = %u, cell number = %u.\n", notch, max_relevant, data_set->s_tab->cell_number);
+		printf("current target = %s\n", data_set->s_tab->tab[data_set->pos]);
+		printf("Skipping already stored: %c == '.'?", data_set->s_tab->tab[data_set->pos][notch]);
+		
+		while(data_set->s_tab->tab[data_set->pos][notch] == '.')
+		{
+			if (data_set->pos == max_relevant)
+			{
+				return (FALSE);
+			}
+			(data_set->pos)++;
+			if (data_set->pos != max_relevant)
+			{
+					printf("Skipping already stored: %c == '.'?\n", data_set->s_tab->tab[data_set->pos][notch]);
+			}
+		}
+	}
+	debug_counter++;
 	return (TRUE);
 }
 
@@ -224,8 +260,8 @@ t_word_tree	*word_tree(t_string_tab *s_tab)
 	return (root);
 }
 
-//Pos is the position of the word in discover order.
-BOOL	is_word_in_tree(const char *word, UCHAR word_len, t_word_tree *root, UINT *pos)
+//this is a generic func, for general use.
+BOOL	is_word_in_tree(const char *word, UCHAR word_len, t_word_tree *root)
 {
 	UINT	notch = 0, i = 0;
 
@@ -254,7 +290,6 @@ BOOL	is_word_in_tree(const char *word, UCHAR word_len, t_word_tree *root, UINT *
 			if (strcmp_n(word + notch, word_len - notch, ((t_remainer*)(root->kids[i]))->remainer, ((t_remainer*)(root->kids[i]))->len))
 			{
 				//puts("The remainer matched.");
-				*pos = ((t_remainer*)(root->kids[i]))->pos;
 				return (TRUE);
 			}
 			i++;
@@ -347,6 +382,6 @@ void	delete_tree_end(t_word_tree *parent_branch, UINT remainer_pos)
 	else
 	{
 		reduce_child_set(parent_branch, remainer_pos);
-		printf("Reduced child set to size: %u.\n", parent_branch->kids_nb);
+		//printf("Reduced child set to size: %u.\n", parent_branch->kids_nb);
 	}
 }

@@ -57,7 +57,7 @@ BOOL is_word_material(const char c)
 
 BOOL is_sep(const char c)
 {
-	return (c == ' ' || c == '\t');
+	return (c == ' ' || c == '\t' || c == '*');
 }
 
 void strcpy_len(const char *src, char *dest, UINT len)
@@ -111,3 +111,73 @@ UINT	get_sep_len(const char *s)
 		i++;
 	return (i);
 }
+
+char *new_string(const char *s)
+{
+	UINT len = slen(s);
+	char *alloc;
+
+	alloc = malloc(len + 1);
+	strcpy_len(s, alloc, len);
+	alloc[len] = '\0';
+	return (alloc);
+}
+
+t_string_tab	*new_string_tab(UINT cell_number)
+{
+	t_string_tab *t = malloc(sizeof(t_string_tab) + cell_number * sizeof(char*));
+	t->tab = ((void*)t) + sizeof(t_string_tab);
+	t->cell_number = cell_number;
+	return (t);
+}
+
+void			free_string_tab(t_string_tab *to_free)
+{
+	UINT	i = 0;
+
+	while (i != to_free->cell_number)
+	{
+		free(to_free->tab[i]);
+		i++;
+	}
+	free(to_free);
+}
+
+
+//The result must be true else the given message is displayed and the program ends.
+void critical_test(char bool_val, const char *msg)
+{
+	if (bool_val)
+		return;
+	puts("\nError:");
+	puts(msg);
+	exit(0);
+}
+
+//returns true if both strings are the same.
+BOOL strcmp_n(const char *s1, int s1_size, const char *s2, int s2_size)
+{
+	int i;
+
+	//printf("Comparing %s of size %u and %s of size %u.\n", s1, s1_size, s2, s2_size);
+	if (s1_size != s2_size)
+		return (0);
+	i = 0;
+	while (i != s1_size)
+	{
+		if (s1[i] != s2[i])
+			return (0);
+		i++;
+	}
+	return (1);
+}
+
+UINT slen(const char *s)
+{
+	int i = 0;
+
+	while (s[i])
+		i++;
+	return (i);
+}
+

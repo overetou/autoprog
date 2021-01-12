@@ -1,2 +1,4 @@
 obj/*
 cassius
+compile_commands.json
+.clangd/*

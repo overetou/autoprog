@@ -65,10 +65,12 @@ void	free_string_tab(t_string_tab *to_free);
 UINT	get_word_len(const char *s);
 UINT	get_sep_len(const char *s);
 UINT get_dir_files_number(void);
+UINT slen(const char *s);
+char *new_string(const char *s);
 
 //word_tree
 t_word_tree	*word_tree(t_string_tab *s_tab);
-BOOL	is_word_in_tree(const char *word, UCHAR word_len, t_word_tree *root, UINT *pos);
+BOOL	is_word_in_tree(const char *word, UCHAR word_len, t_word_tree *root);
 t_word_tree	*get_word_info_from_tree(const char *word, UCHAR word_len, t_word_tree *root, UINT *remainer_pos);
 void	delete_tree_end(t_word_tree *parent_branch, UINT remainer_pos);
 
