@@ -1,10 +1,10 @@
-#ifndef CASSIUS_H
-# define CASSIUS_H
+#ifndef AUTOPROG_H
+# define AUTOPROG_H
 
 # include <stdio.h>
 # include <stdlib.h>
 
-# define USAGE "Usage:\n./cassius [42] <command> [command object]\nAvailable commands:\n"\
+# define USAGE "Usage:\n./autoprog [42] <command> [command object]\nAvailable commands:\n"\
 "  tidy\nAvailable command objects:\n  prototypes\n\n[] = optionnal, <> = required."
 
 # define BOOL char

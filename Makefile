@@ -1,5 +1,5 @@
 #Work title
-TARGET=cassius
+TARGET=autoprog
 
 #Directories
 OBJ_DIR=obj
