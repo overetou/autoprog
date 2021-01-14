@@ -67,6 +67,7 @@ UINT	get_sep_len(const char *s);
 UINT get_dir_files_number(void);
 UINT slen(const char *s);
 char *new_string(const char *s);
+BOOL is_digit(const char c);
 
 //word_tree
 t_word_tree	*word_tree(t_string_tab *s_tab);

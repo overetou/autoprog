@@ -15,6 +15,11 @@ BOOL strcmp_on_n(const char *s1, const char *s2, int n)
 	return (TRUE);
 }
 
+BOOL is_digit(const char c)
+{
+	return (c >= '0' && c <= '9');
+}
+
 BOOL is_dot(const char *s, const char c)
 {
 	int i = 0;
@@ -148,7 +153,7 @@ void			free_string_tab(t_string_tab *to_free)
 void critical_test(char bool_val, const char *msg)
 {
 	if (bool_val)
-		return;
+		return ;
 	puts("\nError:");
 	puts(msg);
 	exit(0);

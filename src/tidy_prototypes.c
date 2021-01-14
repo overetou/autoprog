@@ -96,7 +96,7 @@ static BOOL	next_func_call(const char *s, UINT *pos, UINT *len)
 		{
 			if (s[i] == '\n')
 			{
-				*pos += i + 1;
+				*pos += i;
 				return (FALSE);
 			}
 			if (!s[i])
@@ -109,10 +109,10 @@ static BOOL	next_func_call(const char *s, UINT *pos, UINT *len)
 		start = i;
 		while (is_word_material(s[i]))
 			i++;
-		if (s[i] == '(')
+		if (s[i] != ' ' && s[i] != '\n' && s[i] != '[' && !is_digit(s[i]))
 		{
 			*pos += start;
-			*len = i - start - 1;
+			*len = i - start;
 			return (TRUE);
 		}
 	}
@@ -139,25 +139,30 @@ static void	add_extrafile_funcs(const char *file_name, UINT **interfile_funcs, U
 	{
 		if (is_sep(content[i]))
 		{
-			printf("found a line beginning by a sep at line: %u\n", line);
-			if (next_func_call(content + i, &i, &len))
+			//printf("found a line beginning by a sep at line: %u\n", line);
+			while (content[i] != '\n' && content[i])
 			{
-				printf("A func call was found at line %u:\n", line);
-				write(1, content + i, len);putchar('\n');
-				exit(0);
-				parent_branch = get_word_info_from_tree(content, len, tree, &remainer_pos);
-				if (parent_branch && is_outside_of_current_file(((t_remainer*)(parent_branch->kids[remainer_pos]))->pos, file_limits))
+				if (next_func_call(content + i, &i, &len))
 				{
-					printf("Found a matching prototype out of the current file. The number of public func will now be: %u. It's pos is: %u\n", (*interfile_func_nb) + 1, ((t_remainer*)(parent_branch->kids[remainer_pos]))->pos);
-					*interfile_funcs = realloc(*interfile_funcs, sizeof(UINT) * ((*interfile_func_nb) + 1));
-					(*interfile_funcs)[(*interfile_func_nb)] = ((t_remainer*)(parent_branch->kids[remainer_pos]))->pos;
-					(*interfile_func_nb)++;
-					puts("Deleting the remainer and every branch above it that will consequently be left with no children.");
-					delete_tree_end(parent_branch, remainer_pos);
+					printf("A func call was found at line %u:\n", line);
+					write(1, content + i, len);putchar('\n');
+					parent_branch = get_word_info_from_tree(content + i, len, tree, &remainer_pos);
+					//printf("Search completed. The func call was %s.\n", parent_branch ? "found" : "not found");
+					if (parent_branch && is_outside_of_current_file(((t_remainer*)(parent_branch->kids[remainer_pos]))->pos, file_limits))
+					{
+						printf("Found a matching prototype out of the current file. The number of public func will now be: %u. It's pos is: %u\n", (*interfile_func_nb) + 1, ((t_remainer*)(parent_branch->kids[remainer_pos]))->pos);
+						*interfile_funcs = realloc(*interfile_funcs, sizeof(UINT) * ((*interfile_func_nb) + 1));
+						(*interfile_funcs)[(*interfile_func_nb)] = ((t_remainer*)(parent_branch->kids[remainer_pos]))->pos;
+						(*interfile_func_nb)++;
+						puts("Deleting the remainer and every branch above it that will consequently be left with no children.");
+						delete_tree_end(parent_branch, remainer_pos);
+					}
+					else
+						puts("This func call refers a func defined in the same file or in a lib.");
+					i += len;
 				}
 			}
-			else
-				line++;
+			line++;
 		}
 		else
 		{
@@ -186,6 +191,8 @@ UINT	search_interfile_funcs(t_word_tree *tree, UINT **file_limits)
 			{
 				printf("Opening %s. Current file limits: %u - %u\n", dir->d_name, (*file_limits)[i], (*file_limits)[i + 1]);
 				add_extrafile_funcs(dir->d_name, &interfile_funcs, &interfile_func_nb, (*file_limits) + i, tree);
+				if (strcmp_n(dir->d_name, slen(dir->d_name), "main.c", 6))
+					exit(0);
 				i++;
 			}
 		}
@@ -193,13 +200,13 @@ UINT	search_interfile_funcs(t_word_tree *tree, UINT **file_limits)
 	}
 	free(*file_limits);
 	*file_limits = interfile_funcs;
-	puts("Finished finding functions whose prototypes must be public. Their index are:");
+	/* puts("Finished finding functions whose prototypes must be public. Their index are:");
 	i = 0;
 	while (i != interfile_func_nb)
 	{
 		printf("%u\n", (*file_limits)[i]);
 		i++;
-	}
+	} */
 	return (interfile_func_nb);
 }
 
@@ -233,7 +240,7 @@ void	tidy_prototypes(t_master *m)
 {
 	t_string_tab protos;
 	t_word_tree *tree;
-	UINT		*file_limits, i;
+	UINT		*file_limits, i, j = 0;
 
 	critical_test(chdir("src") == 0, "You must be at the root of your project. Your source folder must be named src.");
 	file_limits = malloc(sizeof(UINT) * (get_dir_files_number() + 1));
@@ -241,6 +248,13 @@ void	tidy_prototypes(t_master *m)
 	tree = create_func_names_tree(&protos);
 	//puts("step 5");
 	i = search_interfile_funcs(tree, &file_limits);
+	puts("End of the searching job in C files. List of funcs needed in header file:");
+	while (j != i)
+	{
+		puts(protos.tab[file_limits[j]]);
+		j++;
+	}
+	exit(0);
 	//search for their prototype in the .h
 	//if they are not in there, add them.
 	//puts("step 6");

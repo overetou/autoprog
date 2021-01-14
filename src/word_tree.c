@@ -149,13 +149,13 @@ t_remainer *create_remainer(char *s, UINT pos)
 	res->remainer[len] = '\0';
 	res->len = len;
 	res->pos = pos;
-	/* if (!strcmp(s, "main"))
-		printf("res->remainer = %s\nDone. Returning res.\n", res->remainer); */
+	//printf("res->remainer = %s\n", res->remainer);
 	return (res);
 }
 
-void	add_remainer(t_floor_data *data_set, UINT notch)
+void	add_remainer(t_floor_data *data_set, UINT notch, t_string_tab *tab)
 {
+	UINT	global_func_pos = 0;
 	//printf("\nFloor %u: Kids count of current branch + 1 = %u.\n", notch, data_set->parent_branch->kids_nb + 1);
 	//printf("Adding a remainer. realloc data_set->parent_branch->kids with size: %lu.\n", (data_set->parent_branch->kids_nb + 1) * sizeof(void*));
 	data_set->parent_branch->kids = realloc(data_set->parent_branch->kids, (data_set->parent_branch->kids_nb + 1) * sizeof(void*));
@@ -164,12 +164,13 @@ void	add_remainer(t_floor_data *data_set, UINT notch)
 		puts("Realloc failed.");
 		exit(0);
 	}
+	while (tab->tab[global_func_pos] != data_set->s_tab->tab[data_set->pos])
+		global_func_pos++;
 	//printf("Putting a remainer inside data_set->parent_branch->kids[%u].\n", data_set->parent_branch->kids_nb);
-	data_set->parent_branch->kids[data_set->parent_branch->kids_nb] = create_remainer(data_set->s_tab->tab[data_set->pos] + notch, data_set->pos);
+	data_set->parent_branch->kids[data_set->parent_branch->kids_nb] = create_remainer(data_set->s_tab->tab[data_set->pos] + notch, global_func_pos);
+	//printf("stored a func with absolute pos: %u.\n", global_func_pos);
 	(data_set->parent_branch->kids_nb)++;
 }
-
-//UINT	debug_counter = 0;
 
 BOOL	is_count_relevant(t_floor_data *data_set, UINT notch)
 {
@@ -238,7 +239,7 @@ t_word_tree	*word_tree(t_string_tab *s_tab)
 				}
 				else
 				{
-					add_remainer(data_sets, notch);
+					add_remainer(data_sets, notch, s_tab);
 					//printf("\"%s\" is well stored in the tree. New pos of current data pack = %u.\n", ((t_remainer*)(data_sets->parent_branch->kids[(data_sets->parent_branch->kids_nb) - 1]))->remainer, data_sets->pos + 1);
 					(data_sets->pos)++;
 				}
@@ -255,6 +256,7 @@ t_word_tree	*word_tree(t_string_tab *s_tab)
 		//printf("Freed a data pack. Notch is now %u.\n", notch);
 	}
 	//puts("Done! Don't forget to free your string_tab! (And don't fret by seeing the notch at 4294967295 just above. It's 0 - 1\n");
+	//exit(0);
 	return (root);
 }
 
@@ -298,19 +300,59 @@ BOOL	is_word_in_tree(const char *word, UCHAR word_len, t_word_tree *root)
 	return (FALSE);
 }
 
+//UINT	debug_counter = 0;
+
 t_word_tree	*get_word_info_from_tree(const char *word, UCHAR word_len, t_word_tree *root, UINT *remainer_pos)
 {
 	UINT	notch = 0, i = 0;
+	//debug_counter++;
+	//printf("Debug counter = %u.\n", debug_counter);
 
-	//puts("Beginning search for:");write(1, word, word_len);putchar('\n');
+	/* if (debug_counter == 5)
+	{
+		puts("Beginning search for:");write(1, word, word_len);putchar('\n');
+		while (i != root->kids_nb)
+		{
+			if (((t_word_tree*)(root->kids[i]))->letter)
+			{
+				printf("Comparing with letter %c.\n", ((t_word_tree*)(root->kids[i]))->letter);
+				if (word[notch] == ((t_word_tree*)(root->kids[i]))->letter)
+				{
+					puts("The letter matched.");
+					notch++;
+					root = root->kids[i];
+					i = 0;
+				}
+				else
+				{
+					i++;
+					printf("No match. Increasing i to %u. Still %u chances to match.\n", i, root->kids_nb - i);
+				}
+			}
+			else
+			{
+				printf("Comparing with remainer: %s\n", ((t_remainer*)(root->kids[i]))->remainer);
+				if (strcmp_n(word + notch, word_len - notch, ((t_remainer*)(root->kids[i]))->remainer, ((t_remainer*)(root->kids[i]))->len))
+				{
+					puts("The remainer matched.");
+					*remainer_pos = i;
+					return (root);
+				}
+				i++;
+				printf("No match. Increasing i to %u. Still %u chances to match.\n", i, root->kids_nb - i);
+			}
+			printf("Notch = %u, word_len = %u.\n", notch, word_len);
+		}
+		exit(0);
+	}
+	else
+	{ */
 	while (i != root->kids_nb)
 	{
 		if (((t_word_tree*)(root->kids[i]))->letter)
 		{
-			//printf("Comparing with letter %c.\n", ((t_word_tree*)(root->kids[i]))->letter);
 			if (word[notch] == ((t_word_tree*)(root->kids[i]))->letter)
 			{
-				//puts("The letter matched.");
 				notch++;
 				root = root->kids[i];
 				i = 0;
@@ -318,22 +360,17 @@ t_word_tree	*get_word_info_from_tree(const char *word, UCHAR word_len, t_word_tr
 			else
 			{
 				i++;
-				//printf("No match. Increasing i to %u. Still %u chances to match.\n", i, root->kids_nb - i);
 			}
 		}
 		else
 		{
-			//printf("Comparing with remainer: %s\n", ((t_remainer*)(root->kids[i]))->remainer);
 			if (strcmp_n(word + notch, word_len - notch, ((t_remainer*)(root->kids[i]))->remainer, ((t_remainer*)(root->kids[i]))->len))
 			{
-				//puts("The remainer matched.");
 				*remainer_pos = i;
 				return (root);
 			}
 			i++;
-			//printf("No match. Increasing i to %u. Still %u chances to match.\n", i, root->kids_nb - i);
 		}
-		//printf("Notch = %u, word_len = %u.\n", notch, word_len);
 	}
 	return (NULL);
 }
@@ -348,38 +385,44 @@ static void	reduce_child_set(t_word_tree *branch, UINT pos)
 	}
 }
 
-void	delete_tree_end(t_word_tree *parent_branch, UINT remainer_pos)
+void delete_tree_end(t_word_tree *branch, UINT remainer_pos)
 {
 	t_word_tree *parent;
 
-	if (parent_branch->kids_nb == 1)
+	if (branch->kids_nb == 1)
 	{
-		parent = parent_branch->parent;
+		//puts("Given branch has only one kid remaining.");
+		parent = branch->parent;
 		while (parent)
 		{
 			if (parent->kids_nb == 1)
 			{
-				puts("Detected a letter branch to delete.");
-				free(parent_branch->kids);
-				free(parent_branch);
-				parent_branch = parent;
-				parent = parent_branch->parent;
+		//		puts("Detected a letter branch parent to delete. (Only one child "
+		//		"remaining.)\nFreeing the branch kids and and the branch itself.");
+				free(branch->kids);
+				free(branch);
+		//		puts("The current branch is now the parent of the recently freed one.");
+				branch = parent;
+				parent = branch->parent;
 			}
 			else
 			{
+		//		puts("The parent still has other children. shifting the set.");
 				remainer_pos = 0;
-				while (parent->kids[remainer_pos] != parent_branch)
+				while (parent->kids[remainer_pos] != branch)
 					remainer_pos++;
 				reduce_child_set(parent, remainer_pos);
 				break;
 			}
 		}
-		free(parent_branch->kids);
-		free(parent_branch);
+		//puts("freeing the branch kids and and the branch itself.");
+		free(branch->kids);
+		free(branch);
 	}
 	else
 	{
-		reduce_child_set(parent_branch, remainer_pos);
-		//printf("Reduced child set to size: %u.\n", parent_branch->kids_nb);
+		//printf("Current branch has %u children. Targeted remainer is at pos: %u.\n", branch->kids_nb, remainer_pos);
+		reduce_child_set(branch, remainer_pos);
+		//printf("Reduced child set to size: %u.\n", branch->kids_nb);
 	}
 }
