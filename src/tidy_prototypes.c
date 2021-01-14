@@ -80,35 +80,32 @@ t_word_tree	*create_func_names_tree(t_string_tab *proto_tab)
 	//print_string_tab(names);
 	//build the tree here.
 	res = word_tree(names);
-	exit(0);
 	free_string_tab(names);
 	puts("Finished builing the tree.");
 	return (res);
 }
 
-static UINT	next_func_call(const char *s, UINT *pos, UINT *len)
+//Position pos at the start of the detected func. Len will be the size of it.
+static BOOL	next_func_call(const char *s, UINT *pos, UINT *len)
 {
 	UINT i = 0, start;
 
-	while (!s[i] || s[i] == '\n')
+	while (!is_word_material(s[i]))
 	{
-		while (!is_word_material(s[i]))
+		i++;
+		if (!s[i] || s[i] == '\n')
 		{
-			i++;
-			if (!s[i] || s[i] == '\n')
-			{
-				*pos += i;
-				return (FALSE);
-			}
+			*pos += i;
+			return (FALSE);
 		}
-		start = i;
-		while(is_word_material(s[i++]));
-		if (s[i] == '(')
-		{
-			*pos += start;
-			*len = i - start;
-			return TRUE;
-		}
+	}
+	start = i;
+	while(is_word_material(s[i++]));
+	if (s[i] == '(')
+	{
+		*pos += start;
+		*len = i - start;
+		return (TRUE);
 	}
 	*pos += i;
 	return (FALSE);
@@ -122,7 +119,7 @@ static BOOL	is_outside_of_current_file(UINT pos, UINT *file_limits)
 static void	add_extrafile_funcs(const char *file_name, UINT **interfile_funcs, UINT *interfile_func_nb, UINT *file_limits, t_word_tree *tree)
 {
 	int fd = open(file_name, O_RDONLY);
-	UINT len = file_len(fd), i = 0, remainer_pos, line = 0;
+	UINT len = file_len(fd), i = 0, remainer_pos, line = 1;
 	char *content = malloc(len + 1);
 	t_word_tree *parent_branch;
 
@@ -133,6 +130,7 @@ static void	add_extrafile_funcs(const char *file_name, UINT **interfile_funcs, U
 	{
 		if (is_sep(content[i]))
 		{
+			printf("found a line beginning by a sep at line: %u\n", line);
 			if (next_func_call(content + i, &i, &len))
 			{
 				printf("A func call was found at line %u:", line);

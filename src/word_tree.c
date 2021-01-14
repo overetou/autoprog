@@ -108,6 +108,11 @@ t_floor_data	*add_floor_data(t_floor_data *data_set, UINT notch, UINT count)
 	}
 	//printf("Creating a letter branch with letter %c. data_set->parent_branch->kids_nb will then be %u.\n", data_set->s_tab->tab[data_set->pos][notch], data_set->parent_branch->kids_nb + 1);
 	data_set->parent_branch->kids[data_set->parent_branch->kids_nb]	= create_letter_branch(data_set->s_tab->tab[data_set->pos][notch], data_set->parent_branch);
+	/* if (!strcmp(data_set->s_tab->tab[data_set->pos], "main"))
+	{
+		printf("created new letter: %c.Concurrence = \n", data_set->s_tab->tab[data_set->pos][notch]);
+		print_string_tab(data_set->s_tab);
+	} */
 	(data_set->parent_branch->kids_nb)++;
 	t->tab[0] = data_set->s_tab->tab[data_set->pos];
 	//printf("Added %s to the s_tab of the kid branch to be. (at index 0). We have %u concurrents to find.\n", t->tab[0], count);
@@ -144,7 +149,8 @@ t_remainer *create_remainer(char *s, UINT pos)
 	res->remainer[len] = '\0';
 	res->len = len;
 	res->pos = pos;
-	//printf("res->remainer = %s\nDone. Returning res.\n", res->remainer);
+	/* if (!strcmp(s, "main"))
+		printf("res->remainer = %s\nDone. Returning res.\n", res->remainer); */
 	return (res);
 }
 
@@ -163,19 +169,15 @@ void	add_remainer(t_floor_data *data_set, UINT notch)
 	(data_set->parent_branch->kids_nb)++;
 }
 
-UINT	debug_counter = 0;
+//UINT	debug_counter = 0;
 
 BOOL	is_count_relevant(t_floor_data *data_set, UINT notch)
 {
-	printf("debug counter = %u\n", debug_counter);
+	//printf("debug counter = %u\n", debug_counter);
 	UINT	max_relevant = data_set->s_tab->cell_number - 1;
 	
-	if (debug_counter != 90)
-	{
-		//printf("is count relevant: notch = %u, max relevant = %u, cell number = %u.\n", notch, max_relevant, data_set->s_tab->cell_number);
-		//printf("current target = %s\n", data_set->s_tab->tab[data_set->pos]);
-		//printf("Skipping already stored: %c == '.'?", data_set->s_tab->tab[data_set->pos][notch]);
-		
+	/* if (strcmp(data_set->s_tab->tab[data_set->pos], "main"))
+	{ */
 		while(data_set->s_tab->tab[data_set->pos][notch] == '.')
 		{
 			if (data_set->pos == max_relevant)
@@ -183,22 +185,18 @@ BOOL	is_count_relevant(t_floor_data *data_set, UINT notch)
 				return (FALSE);
 			}
 			(data_set->pos)++;
-	//		if (data_set->pos != max_relevant)
-	//		{
-				//	printf("Skipping already stored: %c == '.'?\n", data_set->s_tab->tab[data_set->pos][notch]);
-	//		}
 		}
-	}
+	/* }
 	else
 	{
-		printf("is count relevant: notch = %u, max relevant = %u, cell number = %u.\n", notch, max_relevant, data_set->s_tab->cell_number);
+		printf("is count relevant: notch = %u, pos = %u, max relevant = %u, cell number = %u.\n", notch, data_set->pos, max_relevant, data_set->s_tab->cell_number);
 		printf("current target = %s\n", data_set->s_tab->tab[data_set->pos]);
-		printf("Skipping already stored: %c == '.'?", data_set->s_tab->tab[data_set->pos][notch]);
-		
+		printf("Skipping already stored: %c == '.'?\n", data_set->s_tab->tab[data_set->pos][notch]);
 		while(data_set->s_tab->tab[data_set->pos][notch] == '.')
 		{
 			if (data_set->pos == max_relevant)
 			{
+				debug_counter++;
 				return (FALSE);
 			}
 			(data_set->pos)++;
@@ -208,7 +206,7 @@ BOOL	is_count_relevant(t_floor_data *data_set, UINT notch)
 			}
 		}
 	}
-	debug_counter++;
+	debug_counter++; */
 	return (TRUE);
 }
 
