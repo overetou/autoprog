@@ -178,7 +178,7 @@ BOOL	is_count_relevant(t_floor_data *data_set, UINT notch)
 	
 	/* if (strcmp(data_set->s_tab->tab[data_set->pos], "main"))
 	{ */
-		while(data_set->s_tab->tab[data_set->pos][notch] == '.')
+		while (data_set->s_tab->tab[data_set->pos][notch] == '.')
 		{
 			if (data_set->pos == max_relevant)
 			{
@@ -192,7 +192,7 @@ BOOL	is_count_relevant(t_floor_data *data_set, UINT notch)
 		printf("is count relevant: notch = %u, pos = %u, max relevant = %u, cell number = %u.\n", notch, data_set->pos, max_relevant, data_set->s_tab->cell_number);
 		printf("current target = %s\n", data_set->s_tab->tab[data_set->pos]);
 		printf("Skipping already stored: %c == '.'?\n", data_set->s_tab->tab[data_set->pos][notch]);
-		while(data_set->s_tab->tab[data_set->pos][notch] == '.')
+		while (data_set->s_tab->tab[data_set->pos][notch] == '.')
 		{
 			if (data_set->pos == max_relevant)
 			{

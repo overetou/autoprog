@@ -85,27 +85,36 @@ t_word_tree	*create_func_names_tree(t_string_tab *proto_tab)
 	return (res);
 }
 
-//Position pos at the start of the detected func. Len will be the size of it.
+//Position pos at the start of the detected func. Len will be the size of it. The position will either point after a line return, a func or the file end.
 static BOOL	next_func_call(const char *s, UINT *pos, UINT *len)
 {
 	UINT i = 0, start;
 
-	while (!is_word_material(s[i]))
+	while (s[i])
 	{
-		i++;
-		if (!s[i] || s[i] == '\n')
+		while (!is_word_material(s[i]))
 		{
-			*pos += i;
-			return (FALSE);
+			if (s[i] == '\n')
+			{
+				*pos += i + 1;
+				return (FALSE);
+			}
+			if (!s[i])
+			{
+				*pos += i;
+				return (FALSE);
+			}
+			i++;
 		}
-	}
-	start = i;
-	while(is_word_material(s[i++]));
-	if (s[i] == '(')
-	{
-		*pos += start;
-		*len = i - start;
-		return (TRUE);
+		start = i;
+		while (is_word_material(s[i]))
+			i++;
+		if (s[i] == '(')
+		{
+			*pos += start;
+			*len = i - start - 1;
+			return (TRUE);
+		}
 	}
 	*pos += i;
 	return (FALSE);
@@ -133,7 +142,7 @@ static void	add_extrafile_funcs(const char *file_name, UINT **interfile_funcs, U
 			printf("found a line beginning by a sep at line: %u\n", line);
 			if (next_func_call(content + i, &i, &len))
 			{
-				printf("A func call was found at line %u:", line);
+				printf("A func call was found at line %u:\n", line);
 				write(1, content + i, len);putchar('\n');
 				exit(0);
 				parent_branch = get_word_info_from_tree(content, len, tree, &remainer_pos);
@@ -147,6 +156,8 @@ static void	add_extrafile_funcs(const char *file_name, UINT **interfile_funcs, U
 					delete_tree_end(parent_branch, remainer_pos);
 				}
 			}
+			else
+				line++;
 		}
 		else
 		{

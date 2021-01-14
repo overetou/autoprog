@@ -21,7 +21,7 @@ BOOL is_dot(const char *s, const char c)
 
 	while (s[i])
 		i++;
-	return(i > 3 && s[i - 1] == c && s[i - 2] == '.');
+	return (i > 3 && s[i - 1] == c && s[i - 2] == '.');
 }
 
 UINT file_len(int fd)
@@ -76,7 +76,7 @@ UINT next_line_offset(const char *s, UINT i)
 	while (s[i])
 	{
 		if (s[i] == '\n')
-			return(i + 1);
+			return (i + 1);
 		i++;
 	}
 	return (i);
@@ -98,7 +98,7 @@ UINT	get_word_len(const char *s)
 {
 	UINT	i = 0;
 
-	while(is_word_material(s[i]))
+	while (is_word_material(s[i]))
 		i++;
 	return (i);
 }
@@ -107,7 +107,7 @@ UINT	get_sep_len(const char *s)
 {
 	UINT	i = 0;
 
-	while(is_sep(s[i]))
+	while (is_sep(s[i]))
 		i++;
 	return (i);
 }
