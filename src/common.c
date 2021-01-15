@@ -62,6 +62,11 @@ UINT get_dir_files_number()
 
 BOOL is_word_material(const char c)
 {
+	return ((c >= 'a' && c <= 'z') || c == '_');
+}
+
+BOOL is_type_material(const char c)
+{
 	return ((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || c == '_');
 }
 

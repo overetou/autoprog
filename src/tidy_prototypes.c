@@ -28,7 +28,7 @@ static void	store_proto_names(const char *file_name, t_string_tab *protos)
 	close(fd);
 	while (content[i])
 	{
-		if (is_word_material(content[i]))
+		if (is_type_material(content[i]))
 		{
 			start = pass_non_types(content, i, len);
 			i = next_line_offset(content, i);
@@ -53,7 +53,7 @@ static void	store_proto_names(const char *file_name, t_string_tab *protos)
 	free(content);
 }
 
-t_word_tree	*create_func_names_tree(t_string_tab *proto_tab)
+static t_word_tree	*create_func_names_tree(t_string_tab *proto_tab, UINT *shortest_len)
 {
 	UINT			i = 0, len, func_name_len;
 	t_string_tab	*names = new_string_tab(proto_tab->cell_number);
@@ -75,6 +75,8 @@ t_word_tree	*create_func_names_tree(t_string_tab *proto_tab)
 	//	printf("names->tab[i] = %s\n", names->tab[i]);
 		names->tab[i][func_name_len] = '\0';
 		i++;
+		if (func_name_len < *shortest_len)
+			*shortest_len = func_name_len;
 	}
 	//puts("Func names:");
 	//print_string_tab(names);
@@ -151,12 +153,13 @@ static BOOL	is_outside_of_current_file(UINT pos, UINT *file_limits)
 	return (pos < *file_limits || pos > file_limits[1]);
 }
 
-static void	add_extrafile_funcs(const char *file_name, UINT **interfile_funcs, UINT *interfile_func_nb, UINT *file_limits, t_word_tree *tree)
+static void	add_extrafile_funcs(const char *file_name, UINT **interfile_funcs, UINT *interfile_func_nb, UINT *file_limits, t_word_tree *tree, const UINT shortest_len)
 {
 	int fd = open(file_name, O_RDONLY);
-	UINT len = file_len(fd), i = 0, remainer_pos, line = 1;
+	UINT len = file_len(fd), i = 0, remainer_pos;
+	UINT line = 1;//debug3
 	char *content = malloc(len + 1);
-	t_word_tree *parent_branch;
+	t_word_tree *branch;
 
 	read(fd, content, len);
 	content[len] = '\0';
@@ -165,42 +168,36 @@ static void	add_extrafile_funcs(const char *file_name, UINT **interfile_funcs, U
 	{
 		if (is_sep(content[i]))
 		{
-			//printf("found a line beginning by a sep at line: %u\n", line);
-			while (content[i] != '\n' && content[i])
+			while (next_func_call(content, &i, &len, shortest_len))
 			{
-				if (next_func_call(content + i, &i, &len, 5))
+				branch = get_word_info_from_tree(content + i, len, tree, &remainer_pos);
+				if (branch && is_outside_of_current_file(((t_remainer*)(branch->kids[remainer_pos]))->pos, file_limits))
 				{
-					printf("A func call was found at line %u:\n", line);
-					write(1, content + i, len);putchar('\n');
-					parent_branch = get_word_info_from_tree(content + i, len, tree, &remainer_pos);
-					//printf("Search completed. The func call was %s.\n", parent_branch ? "found" : "not found");
-					if (parent_branch && is_outside_of_current_file(((t_remainer*)(parent_branch->kids[remainer_pos]))->pos, file_limits))
-					{
-						printf("Found a matching prototype out of the current file. The number of public func will now be: %u. It's pos is: %u\n", (*interfile_func_nb) + 1, ((t_remainer*)(parent_branch->kids[remainer_pos]))->pos);
-						*interfile_funcs = realloc(*interfile_funcs, sizeof(UINT) * ((*interfile_func_nb) + 1));
-						(*interfile_funcs)[(*interfile_func_nb)] = ((t_remainer*)(parent_branch->kids[remainer_pos]))->pos;
-						(*interfile_func_nb)++;
-						puts("Deleting the remainer and every branch above it that will consequently be left with no children.");
-						delete_tree_end(parent_branch, remainer_pos);
-					}
-					else
-						puts("This func call refers a func defined in the same file or in a lib.");
-					i += len;
+					printf("Found a matching func on line %u:\n", line);write(1, content + i, len);putchar('\n');//debug3
+					*interfile_funcs = realloc(*interfile_funcs, sizeof(UINT) * ((*interfile_func_nb) + 1));
+					(*interfile_funcs)[*interfile_func_nb] = ((t_remainer*)(branch->kids[remainer_pos]))->pos;
+					(*interfile_func_nb)++;
+					delete_tree_end(branch, remainer_pos);
 				}
+				i += len;
 			}
-			line++;
+			if (content[i] == '\n')
+			{
+				line++;//debug3
+				i++;
+			}
 		}
 		else
 		{
-			line++;
-			i = next_line_offset(content, i);
+			i += next_line_offset(content, i);
+			line++;//debug3
 		}
 	}
 	free(content);
 }
 
 //The interfile funcs will be stored inside file_limits. The number will directly returned.
-UINT	search_interfile_funcs(t_word_tree *tree, UINT **file_limits)
+UINT	search_interfile_funcs(t_word_tree *tree, UINT **file_limits, const UINT shortest_len)
 {
 	UINT			interfile_func_nb = 0, i = 0;
 	UINT			*interfile_funcs = NULL;
@@ -216,7 +213,7 @@ UINT	search_interfile_funcs(t_word_tree *tree, UINT **file_limits)
 			if (dir->d_type == DT_REG && is_dot(dir->d_name, 'c'))
 			{
 				printf("Opening %s. Current file limits: %u - %u\n", dir->d_name, (*file_limits)[i], (*file_limits)[i + 1]);
-				add_extrafile_funcs(dir->d_name, &interfile_funcs, &interfile_func_nb, (*file_limits) + i, tree);
+				add_extrafile_funcs(dir->d_name, &interfile_funcs, &interfile_func_nb, (*file_limits) + i, tree, shortest_len);
 				if (strcmp_n(dir->d_name, slen(dir->d_name), "main.c", 6))
 					exit(0);
 				i++;
@@ -266,14 +263,17 @@ void	tidy_prototypes(t_master *m)
 {
 	t_string_tab protos;
 	t_word_tree *tree;
-	UINT		*file_limits, i, j = 0;
+	UINT		*file_limits, i, j = 0, shortest_func_len = 100;
 
 	critical_test(chdir("src") == 0, "You must be at the root of your project. Your source folder must be named src.");
+	puts("step1");//debug2
 	file_limits = malloc(sizeof(UINT) * (get_dir_files_number() + 1));
+	puts("step2");//debug2
 	extract_prototypes(&protos, file_limits);
-	tree = create_func_names_tree(&protos);
-	//puts("step 5");
-	i = search_interfile_funcs(tree, &file_limits);
+	puts("step3");//debug2
+	tree = create_func_names_tree(&protos, &shortest_func_len);
+	puts("step 5 (direct from 3 to 5)");//DEBUG2
+	i = search_interfile_funcs(tree, &file_limits, shortest_func_len);
 	puts("End of the searching job in C files. List of funcs needed in header file:");
 	while (j != i)
 	{
@@ -283,14 +283,14 @@ void	tidy_prototypes(t_master *m)
 	exit(0);
 	//search for their prototype in the .h
 	//if they are not in there, add them.
-	//puts("step 6");
+	puts("step 6");//DEBUG2
 	i = 0;
-	//puts("step 7");
+	puts("step 7");//DEBUG2
 	while (i != protos.cell_number)
 		free(protos.tab[i++]);
-	//puts("step 8");
+	puts("step 8");//DEBUG2
 	free(protos.tab);
-	//puts("step 9");
+	puts("step 9");//DEBUG2
 	if (m->ft)
 		puts("42 mode is not implemented yet. The generated prototypes may be too long, so you will still have to split them on two lines by yourself.");
 }
