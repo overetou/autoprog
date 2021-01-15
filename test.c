@@ -95,15 +95,14 @@ static void	test_next_func_call()
 	UINT	pos = 0, len, min_len = 4;
 
 	test(next_func_call(s, &pos, &len, min_len));
-	test_strings_eq(s + pos, len, "main", 4);
+	test_strings_eq(s + pos, len, "main", 4);pos += len;
 	test(next_func_call(s, &pos, &len, min_len));
-	test_strings_eq(s + pos, len, "argc", 4);
+	test_strings_eq(s + pos, len, "argc", 4);pos += len;
 	test(next_func_call(s, &pos, &len, min_len));
-	test_strings_eq(s + pos, len, "char", 4);
+	test_strings_eq(s + pos, len, "char", 4);pos += len;
 	test(next_func_call(s, &pos, &len, min_len));
-	test_strings_eq(s + pos, len, "const", 5);
-	test(!next_func_call(s, &pos, &len, min_len));
-	pos = 0;
+	test_strings_eq(s + pos, len, "const", 5);pos += len;
+	test(!next_func_call(s, &pos, &len, min_len));pos = 0;
 	test(next_func_call(s1, &pos, &len, min_len));
 	test_strings_eq(s1 + pos, len, "tenebres", 8);
 }

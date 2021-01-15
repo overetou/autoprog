@@ -88,7 +88,7 @@ t_word_tree	*create_func_names_tree(t_string_tab *proto_tab)
 //Returns false if given char is a maj or a digit.
 static BOOL	is_forbidden_func_border(const char c)
 {
-	return (is_digit(c) || is_maj(c));
+	return (is_digit(c) || is_maj(c) || c == '[');
 }
 
 //Returns true if a word material is found before line end or file end. Either way pos is updated on the parsed length.
@@ -101,13 +101,13 @@ static BOOL	find_next_word_material(const char *s, UINT *pos)
 		if (s[i] == '\n' || !s[i])
 		{
 			*pos = i;
-			printf("At pos %u, the string is at line or file end.\n", *pos);
+//			printf("At pos %u, the string is at line or file end.\n", *pos);//DEBUG1
 			return (FALSE);
 		}
 		i++;
 	}
 	*pos = i;
-	printf("At pos %u, the string has a word material.\n", *pos);
+//	printf("At pos %u, the string has a word material.\n", *pos);//DEBUG1
 	return (TRUE);
 }
 
@@ -122,7 +122,7 @@ BOOL	next_func_call(const char *s, UINT *pos, UINT *len, const UINT min_len)
 	{
 		if (*pos && is_forbidden_func_border(s[(*pos) - 1]))
 		{
-			printf("At pos %u, the string has a forbidden func border.\n", (*pos) - 1);//DEBUG1
+//			printf("At pos %u, the string has a forbidden func border.\n", (*pos) - 1);//DEBUG1
 			(*pos)++;
 		}
 		else
@@ -130,15 +130,15 @@ BOOL	next_func_call(const char *s, UINT *pos, UINT *len, const UINT min_len)
 			*len = get_word_len(s + (*pos));
 			if (*len < min_len || is_forbidden_func_border(s[(*pos) + (*len)]))
 			{
-				if (*len < min_len)//DEBUG1
-					printf("Calculated len %u < min len %u.\n", *len, min_len);//DEBUG1
-				else//DEBUG1
-					printf("String has a forbidden func border at pos %u (that number will be the new index of search).\n", (*pos) + (*len));//DEBUG1
+//				if (*len < min_len)//DEBUG1
+//					printf("Calculated len %u < min len %u.\n", *len, min_len);//DEBUG1
+//				else//DEBUG1
+//					printf("String has a forbidden func border at pos %u (that number will be the new index of search).\n", (*pos) + (*len));//DEBUG1
 				*pos += *len;
 			}
 			else
 			{
-				printf("Found a func candidat at pos %u and of length %u.\n", *pos, *len);//DEBUG1
+//				printf("Found a func candidat at pos %u and of length %u.\n", *pos, *len);//DEBUG1
 				return (TRUE);
 			}
 		}
