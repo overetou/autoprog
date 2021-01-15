@@ -109,11 +109,12 @@ void 	print_string_tab(t_string_tab *protos)
 	}
 }
 
-UINT	get_word_len(const char *s)
+//counts the number of times func(s[@]) will return true d'affilee.
+UINT	get_chunk_len(const char *s, BOOL(*func)(const char))
 {
 	UINT	i = 0;
 
-	while (is_word_material(s[i]))
+	while (func(s[i]))
 		i++;
 	return (i);
 }

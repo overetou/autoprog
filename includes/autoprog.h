@@ -62,7 +62,7 @@ BOOL strcmp_on_n(const char *s1, const char *s2, int n);
 BOOL strcmp_n(const char *s1, int s1_size, const char *s2, int s2_size);
 t_string_tab	*new_string_tab(UINT cell_number);
 void	free_string_tab(t_string_tab *to_free);
-UINT	get_word_len(const char *s);
+UINT	get_chunk_len(const char *s, BOOL(*func)(const char));
 UINT	get_sep_len(const char *s);
 UINT get_dir_files_number(void);
 UINT slen(const char *s);

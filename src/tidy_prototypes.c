@@ -59,31 +59,34 @@ static t_word_tree	*create_func_names_tree(t_string_tab *proto_tab, UINT *shorte
 	t_string_tab	*names = new_string_tab(proto_tab->cell_number);
 	t_word_tree		*res;
 
-	//printf("there are %u available name spaces.\n", names->cell_number);
+	/* print_string_tab(proto_tab);
+	exit(0); */
+	printf("there are %u available name spaces.\n", names->cell_number);//debug4
 	//create func names string tab
 	while (i != names->cell_number)
 	{
-		len = get_word_len(proto_tab->tab[i]);
+		len = get_chunk_len(proto_tab->tab[i], is_type_material);
 		len += get_sep_len(proto_tab->tab[i] + len);
-		func_name_len = get_word_len(proto_tab->tab[i] + len);
-		//puts("Adding to the s_tab for the tree the name:");
-		//write(1, proto_tab->tab[i] + len, func_name_len);putchar('\n');
-		//printf("func name len = %u.\n", func_name_len);
+		func_name_len = get_chunk_len(proto_tab->tab[i] + len, is_word_material);
+		puts("Adding to the s_tab for the tree the name:");//debug4
+		write(1, proto_tab->tab[i] + len, func_name_len);putchar('\n');//debug4
+		printf("func name len = %u.\n", func_name_len);//debug4
 		names->tab[i] = malloc(func_name_len + 1);
 		critical_test(names->tab[i] != NULL, "Malloc failed.");
 		strcpy_len(proto_tab->tab[i] + len, names->tab[i], func_name_len);
-	//	printf("names->tab[i] = %s\n", names->tab[i]);
+		printf("names->tab[i] = %s\n", names->tab[i]);//debug4
 		names->tab[i][func_name_len] = '\0';
 		i++;
 		if (func_name_len < *shortest_len)
 			*shortest_len = func_name_len;
 	}
-	//puts("Func names:");
-	//print_string_tab(names);
+	puts("Func names:");//debug4
+	print_string_tab(names);//debug4
 	//build the tree here.
 	res = word_tree(names);
 	free_string_tab(names);
-	puts("Finished builing the tree.");
+	puts("Finished builing the tree.");//debug4
+	exit(0);//debug4
 	return (res);
 }
 
@@ -129,7 +132,7 @@ BOOL	next_func_call(const char *s, UINT *pos, UINT *len, const UINT min_len)
 		}
 		else
 		{
-			*len = get_word_len(s + (*pos));
+			*len = get_chunk_len(s + (*pos), is_word_material);
 			if (*len < min_len || is_forbidden_func_border(s[(*pos) + (*len)]))
 			{
 //				if (*len < min_len)//DEBUG1
@@ -248,7 +251,7 @@ static	void extract_prototypes(t_string_tab *protos, UINT *file_limits)
 			if (dir->d_type == DT_REG && is_dot(dir->d_name, 'c'))
 			{
 				file_limits[i++] = protos->cell_number;
-				printf("Currently parsed file = %s\n", dir->d_name);
+				//printf("Currently parsed file = %s\n", dir->d_name);
 				store_proto_names(dir->d_name, protos);
 			}
 		}
@@ -266,13 +269,13 @@ void	tidy_prototypes(t_master *m)
 	UINT		*file_limits, i, j = 0, shortest_func_len = 100;
 
 	critical_test(chdir("src") == 0, "You must be at the root of your project. Your source folder must be named src.");
-	puts("step1");//debug2
+//	puts("step1");//debug2
 	file_limits = malloc(sizeof(UINT) * (get_dir_files_number() + 1));
-	puts("step2");//debug2
+//	puts("step2");//debug2
 	extract_prototypes(&protos, file_limits);
-	puts("step3");//debug2
+//	puts("step3");//debug2
 	tree = create_func_names_tree(&protos, &shortest_func_len);
-	puts("step 5 (direct from 3 to 5)");//DEBUG2
+//	puts("step 5 (direct from 3 to 5)");//DEBUG2
 	i = search_interfile_funcs(tree, &file_limits, shortest_func_len);
 	puts("End of the searching job in C files. List of funcs needed in header file:");
 	while (j != i)
@@ -283,14 +286,14 @@ void	tidy_prototypes(t_master *m)
 	exit(0);
 	//search for their prototype in the .h
 	//if they are not in there, add them.
-	puts("step 6");//DEBUG2
+//	puts("step 6");//DEBUG2
 	i = 0;
-	puts("step 7");//DEBUG2
+//	puts("step 7");//DEBUG2
 	while (i != protos.cell_number)
 		free(protos.tab[i++]);
-	puts("step 8");//DEBUG2
+//	puts("step 8");//DEBUG2
 	free(protos.tab);
-	puts("step 9");//DEBUG2
+//	puts("step 9");//DEBUG2
 	if (m->ft)
 		puts("42 mode is not implemented yet. The generated prototypes may be too long, so you will still have to split them on two lines by yourself.");
 }
