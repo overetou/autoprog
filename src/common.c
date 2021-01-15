@@ -20,6 +20,11 @@ BOOL is_digit(const char c)
 	return (c >= '0' && c <= '9');
 }
 
+BOOL is_maj(const char c)
+{
+	return (c >= 'A' && c <= 'Z');
+}
+
 BOOL is_dot(const char *s, const char c)
 {
 	int i = 0;

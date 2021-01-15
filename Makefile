@@ -44,6 +44,5 @@ debian-deps:
 	echo "No dependencies"
 
 test:
-	gcc -Wall -Wextra -Werror test.c src/tidy_prototypes.c src/common.c src/word_tree.c -I includes -o test_exec
+	@gcc -Wall -Wextra -Werror test.c src/tidy_prototypes.c src/common.c src/word_tree.c -I includes -o test_exec
 	./test_exec
-	rm test_exec

@@ -85,38 +85,64 @@ t_word_tree	*create_func_names_tree(t_string_tab *proto_tab)
 	return (res);
 }
 
-//Position pos at the start of the detected func. Len will be the size of it. The position will either point after a line return, a func or the file end.
-static BOOL	next_func_call(const char *s, UINT *pos, UINT *len)
+//Returns false if given char is a maj or a digit.
+static BOOL	is_forbidden_func_border(const char c)
 {
-	UINT i = 0, start;
+	return (is_digit(c) || is_maj(c));
+}
 
-	while (s[i])
+//Returns true if a word material is found before line end or file end. Either way pos is updated on the parsed length.
+static BOOL	find_next_word_material(const char *s, UINT *pos)
+{
+	UINT i = *pos;
+
+	while (!is_word_material(s[i]))
 	{
-		while (!is_word_material(s[i]))
+		if (s[i] == '\n' || !s[i])
 		{
-			if (s[i] == '\n')
-			{
-				*pos += i;
-				return (FALSE);
-			}
-			if (!s[i])
-			{
-				*pos += i;
-				return (FALSE);
-			}
-			i++;
+			*pos = i;
+			printf("At pos %u, the string is at line or file end.\n", *pos);
+			return (FALSE);
 		}
-		start = i;
-		while (is_word_material(s[i]))
-			i++;
-		if (s[i] != ' ' && s[i] != '\n' && s[i] != '[' && !is_digit(s[i]))
+		i++;
+	}
+	*pos = i;
+	printf("At pos %u, the string has a word material.\n", *pos);
+	return (TRUE);
+}
+
+/*
+Position pos at the start of the detected func. Len will be the size of it. The position will either point at a line return, a func or the string end.
+To identify a func candidat, we first want to find a word material. Then we count how many word materials are behind it. The final len must be >= min_len.
+Note: The caracters preceding or folowing a func call can not be a number or a Maj.
+*/
+BOOL	next_func_call(const char *s, UINT *pos, UINT *len, const UINT min_len)
+{
+	while (find_next_word_material(s, pos))
+	{
+		if (*pos && is_forbidden_func_border(s[(*pos) - 1]))
 		{
-			*pos += start;
-			*len = i - start;
-			return (TRUE);
+			printf("At pos %u, the string has a forbidden func border.\n", (*pos) - 1);//DEBUG1
+			(*pos)++;
+		}
+		else
+		{
+			*len = get_word_len(s + (*pos));
+			if (*len < min_len || is_forbidden_func_border(s[(*pos) + (*len)]))
+			{
+				if (*len < min_len)//DEBUG1
+					printf("Calculated len %u < min len %u.\n", *len, min_len);//DEBUG1
+				else//DEBUG1
+					printf("String has a forbidden func border at pos %u (that number will be the new index of search).\n", (*pos) + (*len));//DEBUG1
+				*pos += *len;
+			}
+			else
+			{
+				printf("Found a func candidat at pos %u and of length %u.\n", *pos, *len);//DEBUG1
+				return (TRUE);
+			}
 		}
 	}
-	*pos += i;
 	return (FALSE);
 }
 
@@ -142,7 +168,7 @@ static void	add_extrafile_funcs(const char *file_name, UINT **interfile_funcs, U
 			//printf("found a line beginning by a sep at line: %u\n", line);
 			while (content[i] != '\n' && content[i])
 			{
-				if (next_func_call(content + i, &i, &len))
+				if (next_func_call(content + i, &i, &len, 5))
 				{
 					printf("A func call was found at line %u:\n", line);
 					write(1, content + i, len);putchar('\n');

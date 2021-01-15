@@ -2,3 +2,4 @@ obj/*
 autoprog
 compile_commands.json
 .clangd/*
+test_exec
