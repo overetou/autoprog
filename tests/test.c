@@ -3,6 +3,12 @@
 UINT	test_number;
 const	char *test_section;
 
+static void	test_exit()
+{
+	puts("Critical test failed. Stopping now.\n");
+	exit(0);
+}
+
 static void	change_test_section(const char *new_section)
 {
 	test_section = new_section;
@@ -18,7 +24,7 @@ static void	test(const BOOL success)
 	test_number++;
 }
 
-static void test_strings_eq(const char *s1, const UINT s1len, const char *s2, const UINT s2len)
+static BOOL test_strings_eq(const char *s1, const UINT s1len, const char *s2, const UINT s2len)
 {
 	UINT	i;
 
@@ -26,7 +32,7 @@ static void test_strings_eq(const char *s1, const UINT s1len, const char *s2, co
 	{
 		test(FALSE);
 		printf("s1 len = %u, s2 len = %u.\n", s1len, s2len);
-		return ;
+		return TRUE;
 	}
 	i = 0;
 	while (i != s1len)
@@ -35,11 +41,24 @@ static void test_strings_eq(const char *s1, const UINT s1len, const char *s2, co
 		{
 			test(FALSE);
 			printf("On pos %u, s1 is '%c'(val=%d) and s2 is '%c'(val=%d).\n", i, s1[i], s1[i], s2[i], s2[i]);
-			return ;
+			return TRUE;
 		}
 		i++;
 	}
 	test(TRUE);
+	return FALSE;
+}
+
+static BOOL	test_uint_eq(const int u1, const int u2)
+{
+	if (u1 == u2)
+	{
+		test(TRUE);
+		return FALSE;
+	}
+	test(FALSE);
+	printf("Tested numbers did not match. %u != %u.\n", u1, u2);
+	return(TRUE);
 }
 
 static void	test_word_tree()
@@ -107,9 +126,56 @@ static void	test_next_func_call()
 	test_strings_eq(s1 + pos, len, "tenebres", 8);
 }
 
+void	add_extrafile_funcs(const char *file_name, UINT **interfile_funcs, UINT *interfile_func_nb, const UINT *file_limits, t_word_tree *tree, const UINT shortest_len);
+
+static void	test_add_extrafile_funcs()
+{
+	change_test_section("Add Extra Funcs");
+	t_string_tab *tab = new_string_tab(9);
+	t_word_tree *tree;
+	//UINT	*interfile_funcs = NULL, interfile_func_nb = 0, file_limits[] = {3, 6};
+
+	tab->tab[0] = new_string("main");
+	tab->tab[1] = new_string("launch_flowers");
+	tab->tab[2] = new_string("func");
+	tab->tab[3] = new_string("count_flowers");
+	tab->tab[4] = new_string("bernard");
+	tab->tab[5] = new_string("berni");
+	tab->tab[6] = new_string("gorille");
+	tab->tab[7] = new_string("benzema");
+	tab->tab[8] = new_string("ber");
+	
+	//test((tree = word_tree(tab)) != NULL);
+	tree = word_tree(tab);
+	free_string_tab(tab);
+	(void)test_uint_eq;
+	(void)test_exit;
+	/* add_extrafile_funcs("tests/matching_test.c", &interfile_funcs, &interfile_func_nb, file_limits, tree, 3);
+	if (test_uint_eq(interfile_func_nb, 2)) test_exit();
+	test_uint_eq(interfile_funcs[0], 0);
+	test_uint_eq(interfile_funcs[1], 1);
+	free(interfile_funcs); */
+	free_word_tree(tree);
+}
+
+static void test_free_word_tree()
+{
+	change_test_section("Free Word tree");
+	t_string_tab *tab = new_string_tab(1);
+	t_word_tree *tree;
+
+	tab->tab[0] = new_string("main");
+	tree = word_tree(tab);
+	free_string_tab(tab);
+	free_word_tree(tree);
+	test(TRUE);
+}
+
 //This is a test for the word tree builder and searcher.
 int	main(void)
 {
 	(void)test_word_tree;
-	test_next_func_call();
+	(void)test_next_func_call;
+	(void)test_free_word_tree;
+	test_add_extrafile_funcs();
 }

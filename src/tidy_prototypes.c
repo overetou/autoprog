@@ -61,32 +61,32 @@ static t_word_tree	*create_func_names_tree(t_string_tab *proto_tab, UINT *shorte
 
 	/* print_string_tab(proto_tab);
 	exit(0); */
-	printf("there are %u available name spaces.\n", names->cell_number);//debug4
+//	printf("there are %u available name spaces.\n", names->cell_number);//debug4
 	//create func names string tab
 	while (i != names->cell_number)
 	{
 		len = get_chunk_len(proto_tab->tab[i], is_type_material);
 		len += get_sep_len(proto_tab->tab[i] + len);
 		func_name_len = get_chunk_len(proto_tab->tab[i] + len, is_word_material);
-		puts("Adding to the s_tab for the tree the name:");//debug4
-		write(1, proto_tab->tab[i] + len, func_name_len);putchar('\n');//debug4
-		printf("func name len = %u.\n", func_name_len);//debug4
+//		puts("Adding to the s_tab for the tree the name:");//debug4
+//		write(1, proto_tab->tab[i] + len, func_name_len);putchar('\n');//debug4
+//		printf("func name len = %u.\n", func_name_len);//debug4
 		names->tab[i] = malloc(func_name_len + 1);
 		critical_test(names->tab[i] != NULL, "Malloc failed.");
 		strcpy_len(proto_tab->tab[i] + len, names->tab[i], func_name_len);
 		names->tab[i][func_name_len] = '\0';
-		printf("names->tab[i] = %s\n", names->tab[i]);//debug4
+//		printf("names->tab[i] = %s\n", names->tab[i]);//debug4
 		i++;
 		if (func_name_len < *shortest_len)
 			*shortest_len = func_name_len;
 	}
-	puts("Func names:");//debug4
-	print_string_tab(names);//debug4
+//	puts("Func names:");//debug4
+//	print_string_tab(names);//debug4
 	//build the tree here.
 	res = word_tree(names);
 	free_string_tab(names);
-	puts("Finished builing the tree.");//debug4
-	exit(0);//debug4
+//	puts("Finished builing the tree.");//debug4
+//	exit(0);//debug4
 	return (res);
 }
 
@@ -103,6 +103,8 @@ static BOOL	find_next_word_material(const char *s, UINT *pos)
 
 	while (!is_word_material(s[i]))
 	{
+		if (s[i] == '\'' || s[i] == '"')
+			i = skip_brackets(s, i);
 		if (s[i] == '\n' || !s[i])
 		{
 			*pos = i;
@@ -151,16 +153,16 @@ BOOL	next_func_call(const char *s, UINT *pos, UINT *len, const UINT min_len)
 	return (FALSE);
 }
 
-static BOOL	is_outside_of_current_file(UINT pos, UINT *file_limits)
+static BOOL	is_outside_of_current_file(UINT pos, const UINT *file_limits)
 {
 	return (pos < *file_limits || pos > file_limits[1]);
 }
 
-static void	add_extrafile_funcs(const char *file_name, UINT **interfile_funcs, UINT *interfile_func_nb, UINT *file_limits, t_word_tree *tree, const UINT shortest_len)
+void	add_extrafile_funcs(const char *file_name, UINT **interfile_funcs, UINT *interfile_func_nb, const UINT *file_limits, t_word_tree *tree, const UINT shortest_len)
 {
 	int fd = open(file_name, O_RDONLY);
 	UINT len = file_len(fd), i = 0, remainer_pos;
-	UINT line = 1;//debug3
+//	UINT line = 1, parsed = 0;//debug3
 	char *content = malloc(len + 1);
 	t_word_tree *branch;
 
@@ -171,31 +173,39 @@ static void	add_extrafile_funcs(const char *file_name, UINT **interfile_funcs, U
 	{
 		if (is_sep(content[i]))
 		{
+//			printf("Line %u begins with a sep. Continuing.\n", line);//debug3
 			while (next_func_call(content, &i, &len, shortest_len))
 			{
+//				printf("Found a potential func call at col %u. Continuing.\n", i - parsed);//debug3
 				branch = get_word_info_from_tree(content + i, len, tree, &remainer_pos);
 				if (branch && is_outside_of_current_file(((t_remainer*)(branch->kids[remainer_pos]))->pos, file_limits))
 				{
-					printf("Found a matching func on line %u:\n", line);write(1, content + i, len);putchar('\n');//debug3
+//					puts("Found a matching func:");write(1, content + i, len);putchar('\n');//debug3
 					*interfile_funcs = realloc(*interfile_funcs, sizeof(UINT) * ((*interfile_func_nb) + 1));
 					(*interfile_funcs)[*interfile_func_nb] = ((t_remainer*)(branch->kids[remainer_pos]))->pos;
 					(*interfile_func_nb)++;
 					delete_tree_end(branch, remainer_pos);
 				}
+//				else//debug3
+//					puts("The candidat was not found in the tree.");//debug3
 				i += len;
 			}
 			if (content[i] == '\n')
 			{
-				line++;//debug3
+//				printf("Arrived at line end (line %u). Advancing by one.\n", line);//debug3
+//				line++;parsed=i + 1;//debug3
 				i++;
 			}
 		}
 		else
 		{
-			i += next_line_offset(content, i);
-			line++;//debug3
+//			printf("Line %u does not start with a sep. Skipping it.\n", line);//debug3
+			i = next_line_offset(content, i);
+//			//printf("pos is now %u.\n", i);//debug3
+//			line++;parsed=i;//debug3
 		}
 	}
+//	printf("Done at line %u and pos %u.\n", line, i);//debug3
 	free(content);
 }
 
@@ -210,15 +220,15 @@ UINT	search_interfile_funcs(t_word_tree *tree, UINT **file_limits, const UINT sh
 	d = opendir(".");
 	if (d)
 	{
-		puts("Beginning to search interfile functions.");
+//		puts("Beginning to search interfile functions.");//debug5
 		while ((dir = readdir(d)) != NULL)
 		{
 			if (dir->d_type == DT_REG && is_dot(dir->d_name, 'c'))
 			{
-				printf("Opening %s. Current file limits: %u - %u\n", dir->d_name, (*file_limits)[i], (*file_limits)[i + 1]);
+//				printf("Opening %s. Current file limits: %u - %u\n", dir->d_name, (*file_limits)[i], (*file_limits)[i + 1]);//debug5
 				add_extrafile_funcs(dir->d_name, &interfile_funcs, &interfile_func_nb, (*file_limits) + i, tree, shortest_len);
-				if (strcmp_n(dir->d_name, slen(dir->d_name), "main.c", 6))
-					exit(0);
+//				if (strcmp_n(dir->d_name, slen(dir->d_name), "common.c", 8))//debug5
+//					exit(0);//debug5
 				i++;
 			}
 		}
@@ -232,7 +242,8 @@ UINT	search_interfile_funcs(t_word_tree *tree, UINT **file_limits, const UINT sh
 	{
 		printf("%u\n", (*file_limits)[i]);
 		i++;
-	} */
+	}
+	exit(0); */
 	return (interfile_func_nb);
 }
 

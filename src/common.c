@@ -86,6 +86,16 @@ void strcpy_len(const char *src, char *dest, UINT len)
 	}
 }
 
+//s[pos] must be the current bracket. Returns the index of the next occurence of the same bracket, segfaulting if need be.
+UINT	skip_brackets(const char *s, UINT pos)
+{
+	char bracket_char = s[pos];
+
+	while (s[++pos] != bracket_char);
+	return (pos + 1);
+}
+
+//Returns the offset of the next line end in the string.
 UINT next_line_offset(const char *s, UINT i)
 {
 	while (s[i])

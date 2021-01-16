@@ -426,3 +426,41 @@ void delete_tree_end(t_word_tree *branch, UINT remainer_pos)
 		//printf("Reduced child set to size: %u.\n", branch->kids_nb);
 	}
 }
+
+void	free_word_tree(t_word_tree *tree)
+{
+	t_word_tree *branch = tree, *parent;
+
+	while (TRUE)
+	{
+		if (branch->kids_nb)
+		{
+//			printf("Still %u child remaining in current branch.\n", branch->kids_nb);//debug6
+			while (((t_word_tree*)(branch->kids[branch->kids_nb - 1]))->letter)
+			{
+//				puts("Last child is still a letter branch. Diving.");//debug6
+				branch = branch->kids[branch->kids_nb - 1];
+			}
+//			puts("Hit bottom. Freeing remainer.");//debug6
+			free(branch->kids[branch->kids_nb - 1]);
+			puts("freed one remainer.");//debug6
+			(branch->kids_nb)--;
+		}
+		else
+		{
+//			puts("Current letter branch has no more kids. Deleting it and jumping upward.");//debug6
+			puts("freed one letter branch.");//debug6
+			parent = branch->parent;
+			free(branch->kids);
+			free(branch);
+			if (parent)
+				(parent->kids_nb)--;
+			else
+			{
+//				puts("Done.");//debug6
+				return ;
+			}
+			branch = parent;
+		}
+	}
+}

@@ -70,6 +70,8 @@ char *new_string(const char *s);
 BOOL is_digit(const char c);
 BOOL is_maj(const char c);
 BOOL is_type_material(const char c);
+UINT	skip_brackets(const char *s, UINT pos);
+void	free_word_tree(t_word_tree *tree);
 
 //word_tree
 t_word_tree	*word_tree(t_string_tab *s_tab);
