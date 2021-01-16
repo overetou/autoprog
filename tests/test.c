@@ -133,7 +133,7 @@ static void	test_add_extrafile_funcs()
 	change_test_section("Add Extra Funcs");
 	t_string_tab *tab = new_string_tab(9);
 	t_word_tree *tree;
-	//UINT	*interfile_funcs = NULL, interfile_func_nb = 0, file_limits[] = {3, 6};
+	UINT	*interfile_funcs = NULL, interfile_func_nb = 0, file_limits[] = {3, 6};
 
 	tab->tab[0] = new_string("main");
 	tab->tab[1] = new_string("launch_flowers");
@@ -145,17 +145,54 @@ static void	test_add_extrafile_funcs()
 	tab->tab[7] = new_string("benzema");
 	tab->tab[8] = new_string("ber");
 	
-	//test((tree = word_tree(tab)) != NULL);
-	tree = word_tree(tab);
+	test((tree = word_tree(tab)) != NULL);
 	free_string_tab(tab);
-	(void)test_uint_eq;
-	(void)test_exit;
-	/* add_extrafile_funcs("tests/matching_test.c", &interfile_funcs, &interfile_func_nb, file_limits, tree, 3);
+	add_extrafile_funcs("tests/matching_test.c", &interfile_funcs, &interfile_func_nb, file_limits, tree, 3);
 	if (test_uint_eq(interfile_func_nb, 2)) test_exit();
 	test_uint_eq(interfile_funcs[0], 0);
 	test_uint_eq(interfile_funcs[1], 1);
-	free(interfile_funcs); */
+	free(interfile_funcs);
 	free_word_tree(tree);
+}
+
+static void test_delete_tree_end()
+{
+	change_test_section("Delete tree end");
+	t_string_tab *tab = new_string_tab(9);
+	t_word_tree *tree, *branch;
+	UINT	remainer_pos;
+
+	tab->tab[0] = new_string("main");
+	tab->tab[1] = new_string("launch_flowers");
+	tab->tab[2] = new_string("func");
+	tab->tab[3] = new_string("count_flowers");
+	tab->tab[4] = new_string("bernard");
+	tab->tab[5] = new_string("berni");
+	tab->tab[6] = new_string("gorille");
+	tab->tab[7] = new_string("benzema");
+	tab->tab[8] = new_string("ber");
+
+	tree = word_tree(tab);
+	free_string_tab(tab);
+	branch = get_word_info_from_tree("main", sizeof("main") - 1, tree, &remainer_pos);
+	delete_tree_end(branch, remainer_pos);
+	branch = get_word_info_from_tree("launch_flowers", sizeof("launch_flowers") - 1, tree, &remainer_pos);
+	delete_tree_end(branch, remainer_pos);
+	branch = get_word_info_from_tree("func", sizeof("func") - 1, tree, &remainer_pos);
+	delete_tree_end(branch, remainer_pos);
+	branch = get_word_info_from_tree("count_flowers", sizeof("count_flowers") - 1, tree, &remainer_pos);
+	delete_tree_end(branch, remainer_pos);
+	branch = get_word_info_from_tree("bernard", sizeof("bernard") - 1, tree, &remainer_pos);
+	delete_tree_end(branch, remainer_pos);
+	branch = get_word_info_from_tree("berni", sizeof("berni") - 1, tree, &remainer_pos);
+	delete_tree_end(branch, remainer_pos);
+	branch = get_word_info_from_tree("gorille", sizeof("gorille") - 1, tree, &remainer_pos);
+	delete_tree_end(branch, remainer_pos);
+	branch = get_word_info_from_tree("benzema", sizeof("benzema") - 1, tree, &remainer_pos);
+	delete_tree_end(branch, remainer_pos);
+	branch = get_word_info_from_tree("ber", sizeof("ber") - 1, tree, &remainer_pos);
+	delete_tree_end(branch, remainer_pos);
+	test(TRUE);
 }
 
 static void test_free_word_tree()
@@ -177,5 +214,6 @@ int	main(void)
 	(void)test_word_tree;
 	(void)test_next_func_call;
 	(void)test_free_word_tree;
-	test_add_extrafile_funcs();
+	test_delete_tree_end();
+	(void)test_add_extrafile_funcs;
 }

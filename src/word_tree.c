@@ -99,36 +99,25 @@ t_floor_data	*add_floor_data(t_floor_data *data_set, UINT notch, UINT count)
 	t_string_tab	*t = new_string_tab(count + 1);
 	UINT			i = data_set->pos + 1;
 
-	//printf("\nFloor %u: Kids count of current branch + 1 = %u.\n", notch, data_set->parent_branch->kids_nb + 1);
 	data_set->parent_branch->kids = realloc(data_set->parent_branch->kids, (data_set->parent_branch->kids_nb + 1) * sizeof(void*));
 	if (data_set->parent_branch->kids == NULL)
 	{
 		puts("Realloc failed.");
 		exit(0);
 	}
-	//printf("Creating a letter branch with letter %c. data_set->parent_branch->kids_nb will then be %u.\n", data_set->s_tab->tab[data_set->pos][notch], data_set->parent_branch->kids_nb + 1);
 	data_set->parent_branch->kids[data_set->parent_branch->kids_nb]	= create_letter_branch(data_set->s_tab->tab[data_set->pos][notch], data_set->parent_branch);
-	/* if (!strcmp(data_set->s_tab->tab[data_set->pos], "main"))
-	{
-		printf("created new letter: %c.Concurrence = \n", data_set->s_tab->tab[data_set->pos][notch]);
-		print_string_tab(data_set->s_tab);
-	} */
 	(data_set->parent_branch->kids_nb)++;
 	t->tab[0] = data_set->s_tab->tab[data_set->pos];
-	//printf("Added %s to the s_tab of the kid branch to be. (at index 0). We have %u concurrents to find.\n", t->tab[0], count);
 	while (count)
 	{
-		//printf("Testing: %c == %c. i = %u\n", t->tab[0][notch], data_set->s_tab->tab[i][notch], i);
 		if (t->tab[0][notch] == data_set->s_tab->tab[i][notch])
 		{
 			t->tab[t->cell_number - count] = data_set->s_tab->tab[i];
 			data_set->s_tab->tab[i][notch] = '.';
-			//printf("Added %s to the s_tab of the kid branch to be. (at index %u) Count will then be %u\n", t->tab[t->cell_number - count], t->cell_number - count, count - 1);
 			count--;
 		}
 		i++;
 	}
-	//puts("Done setting up a floor data and returning it.");
 	return (new_floor_data(t, data_set->parent_branch->kids[data_set->parent_branch->kids_nb - 1]));
 }
 
@@ -251,6 +240,8 @@ t_word_tree	*word_tree(t_string_tab *s_tab)
 		temp = data_sets;
 		data_sets = data_sets->next;
 		//puts("About to free the current data set.");
+		if (data_sets)
+			free(temp->s_tab);
 		free(temp);
 		notch--;
 		//printf("Freed a data pack. Notch is now %u.\n", notch);
@@ -389,6 +380,7 @@ void delete_tree_end(t_word_tree *branch, UINT remainer_pos)
 {
 	t_word_tree *parent;
 
+	free(branch->kids[remainer_pos]);
 	if (branch->kids_nb == 1)
 	{
 		//puts("Given branch has only one kid remaining.");
@@ -411,6 +403,7 @@ void delete_tree_end(t_word_tree *branch, UINT remainer_pos)
 				remainer_pos = 0;
 				while (parent->kids[remainer_pos] != branch)
 					remainer_pos++;
+				//free(branch->kids[branch->kids_nb - 1]);
 				reduce_child_set(parent, remainer_pos);
 				break;
 			}
