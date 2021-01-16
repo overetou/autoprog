@@ -53,17 +53,17 @@ static void	store_proto_names(const char *file_name, t_string_tab *protos)
 	free(content);
 }
 
-static t_word_tree	*create_func_names_tree(t_string_tab *proto_tab, UINT *shortest_len)
+static t_word_tree	*create_func_names_tree(t_string_tab *proto_tab, UINT *shortest_len, t_string_tab **names)
 {
 	UINT			i = 0, len, func_name_len;
-	t_string_tab	*names = new_string_tab(proto_tab->cell_number);
 	t_word_tree		*res;
 
+	*names = new_string_tab(proto_tab->cell_number);
 	/* print_string_tab(proto_tab);
 	exit(0); */
 //	printf("there are %u available name spaces.\n", names->cell_number);//debug4
 	//create func names string tab
-	while (i != names->cell_number)
+	while (i != (*names)->cell_number)
 	{
 		len = get_chunk_len(proto_tab->tab[i], is_type_material);
 		len += get_sep_len(proto_tab->tab[i] + len);
@@ -71,10 +71,10 @@ static t_word_tree	*create_func_names_tree(t_string_tab *proto_tab, UINT *shorte
 //		puts("Adding to the s_tab for the tree the name:");//debug4
 //		write(1, proto_tab->tab[i] + len, func_name_len);putchar('\n');//debug4
 //		printf("func name len = %u.\n", func_name_len);//debug4
-		names->tab[i] = malloc(func_name_len + 1);
-		critical_test(names->tab[i] != NULL, "Malloc failed.");
-		strcpy_len(proto_tab->tab[i] + len, names->tab[i], func_name_len);
-		names->tab[i][func_name_len] = '\0';
+		(*names)->tab[i] = malloc(func_name_len + 1);
+		critical_test((*names)->tab[i] != NULL, "Malloc failed.");
+		strcpy_len(proto_tab->tab[i] + len, (*names)->tab[i], func_name_len);
+		(*names)->tab[i][func_name_len] = '\0';
 //		printf("names->tab[i] = %s\n", names->tab[i]);//debug4
 		i++;
 		if (func_name_len < *shortest_len)
@@ -83,8 +83,7 @@ static t_word_tree	*create_func_names_tree(t_string_tab *proto_tab, UINT *shorte
 //	puts("Func names:");//debug4
 //	print_string_tab(names);//debug4
 	//build the tree here.
-	res = word_tree(names);
-	free_string_tab(names);
+	res = word_tree(*names);
 //	puts("Finished builing the tree.");//debug4
 //	exit(0);//debug4
 	return (res);
@@ -273,11 +272,97 @@ static	void extract_prototypes(t_string_tab *protos, UINT *file_limits)
 	//print_string_tab(protos);
 }
 
+static UINT	pass_typedefs(const char *s, const UINT len)
+{
+	UINT	i = 0;
+	UINT	line = 1;
+
+	while (s[i])
+	{
+		if (is_type_material(s[i]))
+		{
+			if (i + 7 < len && strcmp_on_n(s + i, "typedef", 7))
+				i += 7;
+			else
+				break ;
+		}
+		line++;
+		i = next_line_offset(s, i);
+	}
+	/* printf("Found proto beginning on line %u.\n", line);
+	exit(0); */
+	return (i);
+}
+
+static UINT	list_out_names(t_string_tab *names, UINT *to_add, UINT *to_add_len, const char *file_name)
+{
+	int fd = open(file_name, O_RDONLY);
+	UINT len = file_len(fd), i, func_name_len, pos;
+	char *content = malloc(len + 1);
+
+	read(fd, content, len);
+	content[len] = '\0';
+	close(fd);
+	i = pass_typedefs(content, len);
+	(void)names;
+	(void)to_add;
+	while (content[i])
+	{
+		if (is_type_material(content[i]))
+		{
+			i += get_chunk_len(content + i, is_type_material);
+			i += get_sep_len(content + i);
+			func_name_len = get_chunk_len(content + i, is_word_material);
+			if (is_in_tab(content + i, func_name_len, names, to_add, &pos))
+			{
+				(*to_add_len)--;
+				while (pos != *to_add_len)
+				{
+					to_add[pos] = to_add[pos + 1];
+					pos++;
+				}
+			}
+		}
+		i = next_line_offset(content, i);
+	}
+	free(content);
+}
+
+static void	add_prototypes(t_string_tab *protos, t_string_tab *names, UINT *to_add, UINT to_add_len)
+{
+	//search for already added protos and outlist them
+	DIR *d;
+	struct dirent *dir;
+	char *file_name;
+	UINT	file_len;
+
+	critical_test(chdir("../includes") == 0, "You must be at the root of your project. Your header folder must be named \"includes\".");
+	d = opendir(".");
+	if (d)
+	{
+		while ((dir = readdir(d)) != NULL)
+		{
+			if (dir->d_type == DT_REG && is_dot(dir->d_name, 'h'))
+			{
+				file_name = new_string(dir->d_name);
+				break ;
+			}
+		}
+		closedir(d);
+	}
+	critical_test(file_name != NULL, "You must have created a header file in your includes/ dir before using this command. Don't forget to secure it! (ifndef,define,endif)");
+	//printf("Found header file name: %s\n", file_name);
+	(void)protos;
+	file_len = list_out_names(names, to_add, file_name, &to_add_len);
+	//add remaining protos at the end of the header file, but before the ifndef end.
+	free(file_name);
+}
+
 void	tidy_prototypes(t_master *m)
 {
-	t_string_tab protos;
+	t_string_tab protos, *names;
 	t_word_tree *tree;
-	UINT		*file_limits, i, j = 0, shortest_func_len = 100;
+	UINT		*file_limits, i, shortest_func_len = 100;
 
 	critical_test(chdir("src") == 0, "You must be at the root of your project. Your source folder must be named src.");
 //	puts("step1");//debug2
@@ -285,18 +370,17 @@ void	tidy_prototypes(t_master *m)
 //	puts("step2");//debug2
 	extract_prototypes(&protos, file_limits);
 //	puts("step3");//debug2
-	tree = create_func_names_tree(&protos, &shortest_func_len);
+	tree = create_func_names_tree(&protos, &shortest_func_len, &names);
 //	puts("step 5 (direct from 3 to 5)");//DEBUG2
 	i = search_interfile_funcs(tree, &file_limits, shortest_func_len);
 	puts("End of the searching job in C files. List of funcs needed in header file:");
-	while (j != i)
+	/* while (j != i)
 	{
 		puts(protos.tab[file_limits[j]]);
 		j++;
 	}
-	exit(0);
-	//search for their prototype in the .h
-	//if they are not in there, add them.
+	exit(0); */
+	add_prototypes(&protos, names, file_limits, i);
 //	puts("step 6");//DEBUG2
 	i = 0;
 //	puts("step 7");//DEBUG2
@@ -304,6 +388,7 @@ void	tidy_prototypes(t_master *m)
 		free(protos.tab[i++]);
 //	puts("step 8");//DEBUG2
 	free(protos.tab);
+	free_string_tab(names);
 //	puts("step 9");//DEBUG2
 	if (m->ft)
 		puts("42 mode is not implemented yet. The generated prototypes may be too long, so you will still have to split them on two lines by yourself.");
