@@ -294,6 +294,22 @@ static UINT	pass_typedefs(const char *s, const UINT len)
 	return (i);
 }
 
+static BOOL	is_in_tab(const char *s, UINT func_name_len, t_string_tab *names, UINT *to_add, const UINT to_add_len, UINT *pos)
+{
+	UINT i = 0;
+
+	while (i != to_add_len)
+	{
+		if (strcmp_n(names->tab[to_add[i]], slen(names->tab[to_add[i]]), s, func_name_len))
+		{
+			*pos = i;
+			return (TRUE);
+		}
+		i++;
+	}
+	return (FALSE);
+}
+
 static UINT	list_out_names(t_string_tab *names, UINT *to_add, UINT *to_add_len, const char *file_name)
 {
 	int fd = open(file_name, O_RDONLY);
@@ -313,7 +329,7 @@ static UINT	list_out_names(t_string_tab *names, UINT *to_add, UINT *to_add_len, 
 			i += get_chunk_len(content + i, is_type_material);
 			i += get_sep_len(content + i);
 			func_name_len = get_chunk_len(content + i, is_word_material);
-			if (is_in_tab(content + i, func_name_len, names, to_add, &pos))
+			if (is_in_tab(content + i, func_name_len, names, to_add, *to_add_len, &pos))
 			{
 				(*to_add_len)--;
 				while (pos != *to_add_len)
