@@ -74,8 +74,8 @@ static t_word_tree	*create_func_names_tree(t_string_tab *proto_tab, UINT *shorte
 		names->tab[i] = malloc(func_name_len + 1);
 		critical_test(names->tab[i] != NULL, "Malloc failed.");
 		strcpy_len(proto_tab->tab[i] + len, names->tab[i], func_name_len);
-		printf("names->tab[i] = %s\n", names->tab[i]);//debug4
 		names->tab[i][func_name_len] = '\0';
+		printf("names->tab[i] = %s\n", names->tab[i]);//debug4
 		i++;
 		if (func_name_len < *shortest_len)
 			*shortest_len = func_name_len;
