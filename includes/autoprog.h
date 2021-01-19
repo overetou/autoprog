@@ -49,34 +49,30 @@ typedef struct	s_floor_data
 	struct s_floor_data	*next;
 }				t_floor_data;
 
-void tidy_prototypes(t_master *m);
 void critical_test(char bool_val, const char *msg);
-BOOL is_dot(const char *s, const char c);
-BOOL is_word_material(const char c);
-UINT file_len(int fd);
-BOOL is_sep(const char c);
-void strcpy_len(const char *src, char *dest, UINT len);
-void 	print_string_tab(t_string_tab *protos);
-UINT next_line_offset(const char *s, UINT i);
-BOOL strcmp_on_n(const char *s1, const char *s2, int n);
 BOOL strcmp_n(const char *s1, int s1_size, const char *s2, int s2_size);
+UINT slen(const char *s);
+void tidy_prototypes(t_master *m);
+BOOL strcmp_on_n(const char *s1, const char *s2, int n);
+UINT file_len(int fd);
+BOOL is_type_material(const char c);
+UINT next_line_offset(const char *s, UINT i);
+void strcpy_len(const char *src, char *dest, UINT len);
 t_string_tab	*new_string_tab(UINT cell_number);
-void	free_string_tab(t_string_tab *to_free);
+void 	print_string_tab(t_string_tab *protos);
 UINT	get_chunk_len(const char *s, BOOL(*func)(const char));
 UINT	get_sep_len(const char *s);
-UINT get_dir_files_number(void);
-UINT slen(const char *s);
-char *new_string(const char *s);
+BOOL is_word_material(const char c);
+t_word_tree	*word_tree(t_string_tab *s_tab);
+void	free_string_tab(t_string_tab *to_free);
 BOOL is_digit(const char c);
 BOOL is_maj(const char c);
-BOOL is_type_material(const char c);
 UINT	skip_brackets(const char *s, UINT pos);
-void	free_word_tree(t_word_tree *tree);
-
-//word_tree
-t_word_tree	*word_tree(t_string_tab *s_tab);
-BOOL	is_word_in_tree(const char *word, UCHAR word_len, t_word_tree *root);
+BOOL is_sep(const char c);
 t_word_tree	*get_word_info_from_tree(const char *word, UCHAR word_len, t_word_tree *root, UINT *remainer_pos);
 void	delete_tree_end(t_word_tree *parent_branch, UINT remainer_pos);
+BOOL is_dot(const char *s, const char c);
+char *new_string(const char *s);
+UINT get_dir_files_number(void);
 
 #endif

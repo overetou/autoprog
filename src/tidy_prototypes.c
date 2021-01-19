@@ -53,10 +53,31 @@ static void	store_proto_names(const char *file_name, t_string_tab *protos)
 	free(content);
 }
 
+static t_string_tab *cpy_str_tab_one_alloc(t_string_tab *names, const UINT full_len)
+{
+	t_string_tab *one_alloc_names;
+	UINT	i = 0, written_len = names->cell_number * sizeof(char*), len;
+
+	one_alloc_names = malloc(sizeof(t_string_tab) + names->cell_number * sizeof(char*) + full_len);
+	one_alloc_names->tab = ((void*)one_alloc_names) + sizeof(t_string_tab);
+	one_alloc_names->cell_number = names->cell_number;
+	while (i != one_alloc_names->cell_number)
+	{
+		one_alloc_names->tab[i] = ((void*)(one_alloc_names->tab)) + written_len;
+		len = slen(names->tab[i]);
+		strcpy_len(names->tab[i], one_alloc_names->tab[i], len);
+		one_alloc_names->tab[i][len] = '\0';
+		written_len += len + 1;
+		i++;
+	}
+	return (one_alloc_names);
+}
+
 static t_word_tree	*create_func_names_tree(t_string_tab *proto_tab, UINT *shortest_len, t_string_tab **names)
 {
-	UINT			i = 0, len, func_name_len;
+	UINT			i = 0, len, func_name_len, full_len = 0;
 	t_word_tree		*res;
+	t_string_tab *one_alloc_names;
 
 	*names = new_string_tab(proto_tab->cell_number);
 	/* print_string_tab(proto_tab);
@@ -79,13 +100,17 @@ static t_word_tree	*create_func_names_tree(t_string_tab *proto_tab, UINT *shorte
 		i++;
 		if (func_name_len < *shortest_len)
 			*shortest_len = func_name_len;
+		full_len += func_name_len + 1;
 	}
+	one_alloc_names = cpy_str_tab_one_alloc(*names, full_len);
 //	puts("Func names:");//debug4
 //	print_string_tab(names);//debug4
 	//build the tree here.
 	res = word_tree(*names);
 //	puts("Finished builing the tree.");//debug4
 //	exit(0);//debug4
+	free_string_tab(*names);
+	*names = one_alloc_names;
 	return (res);
 }
 
@@ -302,6 +327,7 @@ static BOOL	is_in_tab(const char *s, UINT func_name_len, t_string_tab *names, UI
 	{
 		if (strcmp_n(names->tab[to_add[i]], slen(names->tab[to_add[i]]), s, func_name_len))
 		{
+			puts(names->tab[to_add[i]]);//debug
 			*pos = i;
 			return (TRUE);
 		}
@@ -322,6 +348,7 @@ static UINT	list_out_names(t_string_tab *names, UINT *to_add, UINT *to_add_len, 
 	i = pass_typedefs(content, len);
 	(void)names;
 	(void)to_add;
+	puts("\nAlready present funcs:");//debug
 	while (content[i])
 	{
 		if (is_type_material(content[i]))
@@ -341,7 +368,26 @@ static UINT	list_out_names(t_string_tab *names, UINT *to_add, UINT *to_add_len, 
 		}
 		i = next_line_offset(content, i);
 	}
+	printf("Length of the remaining protos to add: %u\n", *to_add_len);
 	free(content);
+	return (len);
+}
+
+static void		do_file_edit(t_string_tab *protos, UINT *to_add, const UINT to_add_len, const char *file_name, const UINT file_len)
+{
+	int fd = open(file_name, "O_WRONLY");
+	UINT	i = 0;
+
+	critical_test(fd != -1, "Failed to edit the header file. Do the program have the right permissions?");
+	lseek(fd, SEEK_SET, file_len - 8);
+	while (i != to_add_len)
+	{
+		write(fd, protos->tab[i], slen(protos->tab[i]));
+		write(fd, "\n", 1);
+		i++;
+	}
+	write(fd, "\n#endif\n", 8);
+	close(fd);
 }
 
 static void	add_prototypes(t_string_tab *protos, t_string_tab *names, UINT *to_add, UINT to_add_len)
@@ -369,7 +415,9 @@ static void	add_prototypes(t_string_tab *protos, t_string_tab *names, UINT *to_a
 	critical_test(file_name != NULL, "You must have created a header file in your includes/ dir before using this command. Don't forget to secure it! (ifndef,define,endif)");
 	//printf("Found header file name: %s\n", file_name);
 	(void)protos;
-	file_len = list_out_names(names, to_add, file_name, &to_add_len);
+	file_len = list_out_names(names, to_add, &to_add_len, file_name);
+	if (to_add_len)
+		do_file_edit(protos, to_add, to_add_len, file_name, file_len);
 	//add remaining protos at the end of the header file, but before the ifndef end.
 	free(file_name);
 }
@@ -379,6 +427,7 @@ void	tidy_prototypes(t_master *m)
 	t_string_tab protos, *names;
 	t_word_tree *tree;
 	UINT		*file_limits, i, shortest_func_len = 100;
+	UINT j = 0;
 
 	critical_test(chdir("src") == 0, "You must be at the root of your project. Your source folder must be named src.");
 //	puts("step1");//debug2
@@ -389,13 +438,13 @@ void	tidy_prototypes(t_master *m)
 	tree = create_func_names_tree(&protos, &shortest_func_len, &names);
 //	puts("step 5 (direct from 3 to 5)");//DEBUG2
 	i = search_interfile_funcs(tree, &file_limits, shortest_func_len);
+
 	puts("End of the searching job in C files. List of funcs needed in header file:");
-	/* while (j != i)
+	while (j != i)
 	{
-		puts(protos.tab[file_limits[j]]);
+		puts(names->tab[file_limits[j]]);
 		j++;
 	}
-	exit(0); */
 	add_prototypes(&protos, names, file_limits, i);
 //	puts("step 6");//DEBUG2
 	i = 0;
@@ -403,8 +452,8 @@ void	tidy_prototypes(t_master *m)
 	while (i != protos.cell_number)
 		free(protos.tab[i++]);
 //	puts("step 8");//DEBUG2
+	free(names);
 	free(protos.tab);
-	free_string_tab(names);
 //	puts("step 9");//DEBUG2
 	if (m->ft)
 		puts("42 mode is not implemented yet. The generated prototypes may be too long, so you will still have to split them on two lines by yourself.");
