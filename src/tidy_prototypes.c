@@ -327,7 +327,7 @@ static BOOL	is_in_tab(const char *s, UINT func_name_len, t_string_tab *names, UI
 	{
 		if (strcmp_n(names->tab[to_add[i]], slen(names->tab[to_add[i]]), s, func_name_len))
 		{
-			puts(names->tab[to_add[i]]);//debug
+			//puts(names->tab[to_add[i]]);//debug
 			*pos = i;
 			return (TRUE);
 		}
@@ -348,7 +348,7 @@ static UINT	list_out_names(t_string_tab *names, UINT *to_add, UINT *to_add_len, 
 	i = pass_typedefs(content, len);
 	(void)names;
 	(void)to_add;
-	puts("\nAlready present funcs:");//debug
+	//puts("\nAlready present funcs:");//debug
 	while (content[i])
 	{
 		if (is_type_material(content[i]))
@@ -368,7 +368,7 @@ static UINT	list_out_names(t_string_tab *names, UINT *to_add, UINT *to_add_len, 
 		}
 		i = next_line_offset(content, i);
 	}
-	printf("Length of the remaining protos to add: %u\n", *to_add_len);
+//	printf("Length of the remaining protos to add: %u\n", *to_add_len);
 	free(content);
 	return (len);
 }
@@ -421,6 +421,7 @@ static void	add_prototypes(t_string_tab *protos, t_string_tab *names, UINT *to_a
 	if (to_add_len)
 		do_file_edit(protos, to_add, to_add_len, file_name, file_len);
 	//add remaining protos at the end of the header file, but before the ifndef end.
+	free(to_add);
 	free(file_name);
 }
 
@@ -429,7 +430,7 @@ void	tidy_prototypes(t_master *m)
 	t_string_tab protos, *names;
 	t_word_tree *tree;
 	UINT		*file_limits, i, shortest_func_len = 100;
-	UINT j = 0;
+	//UINT j = 0;
 
 	critical_test(chdir("src") == 0, "You must be at the root of your project. Your source folder must be named src.");
 //	puts("step1");//debug2
@@ -440,13 +441,13 @@ void	tidy_prototypes(t_master *m)
 	tree = create_func_names_tree(&protos, &shortest_func_len, &names);
 //	puts("step 5 (direct from 3 to 5)");//DEBUG2
 	i = search_interfile_funcs(tree, &file_limits, shortest_func_len);
-
-	puts("End of the searching job in C files. List of funcs needed in header file:");
+	free_word_tree(tree);
+	/* puts("End of the searching job in C files. List of funcs needed in header file:");
 	while (j != i)
 	{
 		puts(names->tab[file_limits[j]]);
 		j++;
-	}
+	} */
 	add_prototypes(&protos, names, file_limits, i);
 //	puts("step 6");//DEBUG2
 	i = 0;

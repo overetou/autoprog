@@ -74,5 +74,6 @@ UINT get_dir_files_number(void);
 BOOL strcmp_on_n(const char *s1, const char *s2, int n);
 UINT file_len(int fd);
 BOOL is_type_material(const char c);
+void	free_word_tree(t_word_tree *tree);
 
 #endif
