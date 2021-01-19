@@ -436,13 +436,13 @@ void	free_word_tree(t_word_tree *tree)
 			}
 //			puts("Hit bottom. Freeing remainer.");//debug6
 			free(branch->kids[branch->kids_nb - 1]);
-			puts("freed one remainer.");//debug6
+//			puts("freed one remainer.");//debug6
 			(branch->kids_nb)--;
 		}
 		else
 		{
 //			puts("Current letter branch has no more kids. Deleting it and jumping upward.");//debug6
-			puts("freed one letter branch.");//debug6
+//			puts("freed one letter branch.");//debug6
 			parent = branch->parent;
 			free(branch->kids);
 			free(branch);
