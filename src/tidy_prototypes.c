@@ -375,14 +375,14 @@ static UINT	list_out_names(t_string_tab *names, UINT *to_add, UINT *to_add_len, 
 
 static void		do_file_edit(t_string_tab *protos, UINT *to_add, const UINT to_add_len, const char *file_name, const UINT file_len)
 {
-	int fd = open(file_name, "O_WRONLY");
+	int fd = open(file_name, O_WRONLY);
 	UINT	i = 0;
 
 	critical_test(fd != -1, "Failed to edit the header file. Do the program have the right permissions?");
 	lseek(fd, SEEK_SET, file_len - 8);
 	while (i != to_add_len)
 	{
-		write(fd, protos->tab[i], slen(protos->tab[i]));
+		write(fd, protos->tab[to_add[i]], slen(protos->tab[to_add[i]]));
 		write(fd, "\n", 1);
 		i++;
 	}
