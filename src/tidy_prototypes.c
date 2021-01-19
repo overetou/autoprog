@@ -377,9 +377,11 @@ static void		do_file_edit(t_string_tab *protos, UINT *to_add, const UINT to_add_
 {
 	int fd = open(file_name, O_WRONLY);
 	UINT	i = 0;
+	int	offset;
 
 	critical_test(fd != -1, "Failed to edit the header file. Do the program have the right permissions?");
-	lseek(fd, SEEK_SET, file_len - 8);
+	offset = lseek(fd, file_len - 8, SEEK_SET);
+	printf("offset = %d\n", offset);
 	while (i != to_add_len)
 	{
 		write(fd, protos->tab[to_add[i]], slen(protos->tab[to_add[i]]));

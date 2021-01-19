@@ -53,9 +53,6 @@ void critical_test(char bool_val, const char *msg);
 BOOL strcmp_n(const char *s1, int s1_size, const char *s2, int s2_size);
 UINT slen(const char *s);
 void tidy_prototypes(t_master *m);
-BOOL strcmp_on_n(const char *s1, const char *s2, int n);
-UINT file_len(int fd);
-BOOL is_type_material(const char c);
 UINT next_line_offset(const char *s, UINT i);
 void strcpy_len(const char *src, char *dest, UINT len);
 t_string_tab	*new_string_tab(UINT cell_number);
@@ -74,5 +71,8 @@ void	delete_tree_end(t_word_tree *parent_branch, UINT remainer_pos);
 BOOL is_dot(const char *s, const char c);
 char *new_string(const char *s);
 UINT get_dir_files_number(void);
+BOOL strcmp_on_n(const char *s1, const char *s2, int n);
+UINT file_len(int fd);
+BOOL is_type_material(const char c);
 
 #endif
