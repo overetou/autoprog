@@ -345,6 +345,7 @@ static UINT	list_out_names(t_string_tab *names, UINT *to_add, UINT *to_add_len, 
 	read(fd, content, len);
 	content[len] = '\0';
 	close(fd);
+	critical_test(len > 8 && strcmp_on_n(content + len - 8, "\n#endif\n", 8), "Your header must be protected.");
 	i = pass_typedefs(content, len);
 	(void)names;
 	(void)to_add;
@@ -397,7 +398,7 @@ static void	add_prototypes(t_string_tab *protos, t_string_tab *names, UINT *to_a
 	//search for already added protos and outlist them
 	DIR *d;
 	struct dirent *dir;
-	char *file_name;
+	char *file_name = NULL;
 	UINT	file_len;
 
 	critical_test(chdir("../includes") == 0, "You must be at the root of your project. Your header folder must be named \"includes\".");
