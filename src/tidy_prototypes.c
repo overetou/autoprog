@@ -17,11 +17,29 @@ static UINT	pass_non_types(const char *content, UINT i, const UINT len)
 	return (i);
 }
 
-static void	store_proto_names(const char *file_name, t_string_tab *protos)
+UINT	next_char_in_tab_offset(const char *content, UINT i, const char *possible_ends, UINT tab_size)
+{
+	UINT	evaluated_char_index;
+
+	while (content[i])
+	{
+		evaluated_char_index = 0;
+		while (evaluated_char_index != tab_size)
+		{
+			if (content[i] == possible_ends[evaluated_char_index])
+				return i;
+			evaluated_char_index++;
+		}
+		i++;
+	}
+	return i;
+}
+
+void	store_proto_names(const char *file_name, t_string_tab *protos)
 {
 	int fd = open(file_name, O_RDONLY);
 	UINT len = file_len(fd), i = 0, start, prot_len;
-	char *content = malloc(len + 1);
+	char *content = malloc(len + 1), possible_ends[] = {';', '{'};
 
 	read(fd, content, len);
 	content[len] = '\0';
@@ -31,7 +49,7 @@ static void	store_proto_names(const char *file_name, t_string_tab *protos)
 		if (is_type_material(content[i]))
 		{
 			start = pass_non_types(content, i, len);
-			i = next_line_offset(content, i);
+			i = next_char_in_tab_offset(content, i, possible_ends, 2);
 			//printf("Proto detected. start: %c, end: %c.\n", content[start], content[i]);
 			if (content[i] == '{')
 			{
@@ -80,8 +98,8 @@ static t_word_tree	*create_func_names_tree(t_string_tab *proto_tab, UINT *shorte
 	t_string_tab *one_alloc_names;
 
 	*names = new_string_tab(proto_tab->cell_number);
-	/* print_string_tab(proto_tab);
-	exit(0); */
+	print_string_tab(proto_tab);
+	exit(0);
 //	printf("there are %u available name spaces.\n", names->cell_number);//debug4
 	//create func names string tab
 	while (i != (*names)->cell_number)
@@ -434,15 +452,16 @@ void	tidy_prototypes(t_master *m)
 	//UINT j = 0;
 
 	critical_test(chdir("src") == 0, "You must be at the root of your project. Your source folder must be named src.");
-//	puts("step1");//debug2
 	file_limits = malloc(sizeof(UINT) * (get_dir_files_number() + 1));
-//	puts("step2");//debug2
+	puts("Calculated file limits.");//debugseg
 	extract_prototypes(&protos, file_limits);
-//	puts("step3");//debug2
+	puts("Extracted prototypes.");//debugseg
 	tree = create_func_names_tree(&protos, &shortest_func_len, &names);
-//	puts("step 5 (direct from 3 to 5)");//DEBUG2
+	puts("Extracted prototypes.");//debugseg
 	i = search_interfile_funcs(tree, &file_limits, shortest_func_len);
+	puts("Found interfile funcs.");//debugseg
 	free_word_tree(tree);
+	puts("Freed remaining tree.");//debugseg
 	/* puts("End of the searching job in C files. List of funcs needed in header file:");
 	while (j != i)
 	{
@@ -450,15 +469,13 @@ void	tidy_prototypes(t_master *m)
 		j++;
 	} */
 	add_prototypes(&protos, names, file_limits, i);
-//	puts("step 6");//DEBUG2
+	puts("Added prototypes.");//debugseg
 	i = 0;
-//	puts("step 7");//DEBUG2
 	while (i != protos.cell_number)
 		free(protos.tab[i++]);
-//	puts("step 8");//DEBUG2
 	free(names);
 	free(protos.tab);
-//	puts("step 9");//DEBUG2
+	puts("Freed everything.");//debugseg
 	if (m->ft)
 		puts("42 mode is not implemented yet. The generated prototypes may be too long, so you will still have to split them on two lines by yourself.");
 }

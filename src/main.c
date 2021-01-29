@@ -49,6 +49,7 @@ int main(int argc, char const *argv[])
 	t_master m;
 
 	process_args(argc, argv, &m);
+	puts("args processed.");//debugseg
 	m.to_exec(&m);
 	puts("\nSuccess.");
 	return 0;

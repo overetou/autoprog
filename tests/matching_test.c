@@ -7,9 +7,19 @@ char	*hello(void)
 	main();
 }
 
+int		thefuncthatexpandontreelines(
+	int hello, char c
+)
+{
+	if (c)
+		hello = 5;
+	return hello;
+}
+
 int main(int argc, char const *argv[])
 {
 	launch_flowers(get_flowers, 5 * count_flowers);
+	thefuncthatexpandontreelines(6, 1);
 	return 0;
 	main();
 }

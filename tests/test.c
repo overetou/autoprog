@@ -208,12 +208,32 @@ static void test_free_word_tree()
 	test(TRUE);
 }
 
+static void	test_extract_prototypes()
+{
+	change_test_section("extract_prototypes");
+	t_string_tab protos;
+
+	store_proto_names("tests/matching_test.c", &protos);
+	critical_test(
+		test_uint_eq(protos.cell_number, 3),
+		"Prototypes parsing failed."
+	);
+	test_strings_eq(protos.tab[0], slen(protos.tab[0]), "char	*hello(void);", slen("char	*hello(void);"));
+	test_strings_eq(protos.tab[1], slen(protos.tab[1]), "int		thefuncthatexpandontreelines(\n	int hello, char c\n);", slen("int		thefuncthatexpandontreelines(\n	int hello, char c\n);"));
+	test_strings_eq(protos.tab[2], slen(protos.tab[2]), "int main(int argc, char const *argv[]);", slen("int main(int argc, char const *argv[]);"));
+}
+
+void	succeeded_tests()
+{
+	test_word_tree();
+	test_next_func_call();
+	test_free_word_tree();
+	test_delete_tree_end();
+	test_add_extrafile_funcs();
+}
+
 //This is a test for the word tree builder and searcher.
 int	main(void)
 {
-	(void)test_word_tree;
-	(void)test_next_func_call;
-	(void)test_free_word_tree;
-	test_delete_tree_end();
-	(void)test_add_extrafile_funcs;
+	(void)succeeded_tests;//succeeded_tests();
 }
