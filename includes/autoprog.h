@@ -76,5 +76,6 @@ UINT file_len(int fd);
 BOOL is_type_material(const char c);
 void	free_word_tree(t_word_tree *tree);
 void	store_proto_names(const char *file_name, t_string_tab *protos);
+BOOL	is_word_in_tree(const char *word, UCHAR word_len, t_word_tree *root);
 
 #endif

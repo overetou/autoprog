@@ -3,8 +3,10 @@
 UINT	test_number;
 const	char *test_section;
 
-static void	test_exit()
+static void	test_exit(BOOL val)
 {
+	if (val)
+		return;
 	puts("Critical test failed. Stopping now.\n");
 	exit(0);
 }
@@ -54,11 +56,11 @@ static BOOL	test_uint_eq(const int u1, const int u2)
 	if (u1 == u2)
 	{
 		test(TRUE);
-		return FALSE;
+		return TRUE;
 	}
 	test(FALSE);
 	printf("Tested numbers did not match. %u != %u.\n", u1, u2);
-	return(TRUE);
+	return(FALSE);
 }
 
 static void	test_word_tree()
@@ -148,7 +150,7 @@ static void	test_add_extrafile_funcs()
 	test((tree = word_tree(tab)) != NULL);
 	free_string_tab(tab);
 	add_extrafile_funcs("tests/matching_test.c", &interfile_funcs, &interfile_func_nb, file_limits, tree, 3);
-	if (test_uint_eq(interfile_func_nb, 2)) test_exit();
+	test_exit(test_uint_eq(interfile_func_nb, 2));
 	test_uint_eq(interfile_funcs[0], 0);
 	test_uint_eq(interfile_funcs[1], 1);
 	free(interfile_funcs);
@@ -214,10 +216,7 @@ static void	test_extract_prototypes()
 	t_string_tab protos;
 
 	store_proto_names("tests/matching_test.c", &protos);
-	critical_test(
-		test_uint_eq(protos.cell_number, 3),
-		"Prototypes parsing failed."
-	);
+	test_exit(test_uint_eq(protos.cell_number, 3));
 	test_strings_eq(protos.tab[0], slen(protos.tab[0]), "char	*hello(void);", slen("char	*hello(void);"));
 	test_strings_eq(protos.tab[1], slen(protos.tab[1]), "int		thefuncthatexpandontreelines(\n	int hello, char c\n);", slen("int		thefuncthatexpandontreelines(\n	int hello, char c\n);"));
 	test_strings_eq(protos.tab[2], slen(protos.tab[2]), "int main(int argc, char const *argv[]);", slen("int main(int argc, char const *argv[]);"));
@@ -236,4 +235,5 @@ void	succeeded_tests()
 int	main(void)
 {
 	(void)succeeded_tests;//succeeded_tests();
+	test_extract_prototypes();
 }

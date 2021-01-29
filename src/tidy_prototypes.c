@@ -98,8 +98,6 @@ static t_word_tree	*create_func_names_tree(t_string_tab *proto_tab, UINT *shorte
 	t_string_tab *one_alloc_names;
 
 	*names = new_string_tab(proto_tab->cell_number);
-	print_string_tab(proto_tab);
-	exit(0);
 //	printf("there are %u available name spaces.\n", names->cell_number);//debug4
 	//create func names string tab
 	while (i != (*names)->cell_number)
@@ -311,8 +309,6 @@ static	void extract_prototypes(t_string_tab *protos, UINT *file_limits)
 		file_limits[i] = protos->cell_number + 1;
 		closedir(d);
 	}
-	//puts("Detected prototypes:");
-	//print_string_tab(protos);
 }
 
 static UINT	pass_typedefs(const char *s, const UINT len)
